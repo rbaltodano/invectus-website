@@ -605,8 +605,14 @@ function searchDemo() {
   function show(ex, chip) {
     chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
     clearInterval(typing);
-    current = undefined; hot = -1; hitsEl.innerHTML = ""; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = "";
+    // Fade the old verdict, summary and results out while the new idea types in; clear them
+    // only once they are invisible, so the verdict dot leaves with the text.
+    const result = root.querySelector(".search-result");
+    result.classList.add("fading");
+    current = undefined; hot = -1; draw();
+    const clear = setTimeout(() => { hitsEl.innerHTML = ""; verdictEl.className = "verdict"; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = ""; }, reduced ? 0 : 200);
     const reveal = () => {
+      clearTimeout(clear);
       current = ex;
       verdictEl.className = `verdict ${ex.verdict}`;
       verdictEl.textContent = VERDICT[ex.verdict];
@@ -614,6 +620,7 @@ function searchDemo() {
       hitsEl.innerHTML = ex.hits.map((h, i) => `<li style="--i:${i}" data-i="${i}"><span class="score${i === 0 ? " top" : ""}">${h.similarity.toFixed(2)}</span><span>${esc(h.title)}<em>${h.year} · ${h.role}</em><span class="meter"><span style="--w:${Math.max(0.05, (h.similarity - 0.5) / 0.5).toFixed(3)}"></span></span></span></li>`).join("");
       metaEl.textContent = `Compared with all ${fmt(ex.compared)} stored vectors, exactly. Probability it exists: ${ex.p_exists.toFixed(2)}. ${ex.position} Calibration: ${ex.calibration}`;
       focus(ex);
+      requestAnimationFrame(() => result.classList.remove("fading"));
     };
     if (reduced) { textEl.textContent = ex.query; reveal(); return; }
     let n = 0; textEl.textContent = "";
