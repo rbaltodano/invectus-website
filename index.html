@@ -107,51 +107,49 @@
         </div>
         <figure class="app-window-wrap">
           <div class="app-window">
-            <div class="win-bar" aria-hidden="true"><i></i><i></i><i></i><b>inVectus</b></div>
             <div class="win-body">
               <div class="win-status"><span class="agent-pulse"></span><svg class="mark" width="14" height="14"><use href="#mark-claude"/></svg><span class="shimmer" data-text="Claude Code · reviewing gaps"></span></div>
               <div class="suggestion">
                 <div class="sugg-head">
                   <span class="tag">Agent suggestion</span>
-                  <span class="attr-wrap">
+                  <div class="attr-wrap">
                     <button type="button" class="agent-attribution" aria-expanded="true" aria-controls="model-pop" aria-label="Claude Opus 5.5 Medium; choose model for future work">
                       <svg class="mark" width="14" height="14"><use href="#mark-claude"/></svg><span>Claude Opus 5.5 Medium</span><svg width="12" height="12"><use href="#i-chevron"/></svg>
                     </button>
                     <span class="next-model" hidden></span>
-                  </span>
+                    <div class="model-popover" id="model-pop" role="dialog" aria-label="Model for future work">
+                      <div class="model-selector" data-follow-current="true">
+                        <div class="model-provider" role="group" aria-label="Claude">
+                          <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark" width="16" height="16"><use href="#mark-claude"/></svg><span>Claude</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
+                          <div class="model-options">
+                            <button type="button" class="model-option" aria-pressed="true"><span>Claude Opus 5.5 Medium</span></button>
+                            <button type="button" class="model-option" aria-pressed="false"><span>Claude Opus 5.5 High</span></button>
+                          </div>
+                        </div>
+                        <div class="model-provider" role="group" aria-label="ChatGPT">
+                          <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark openai" width="16" height="16"><use href="#mark-openai"/></svg><span>ChatGPT</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
+                          <div class="model-options">
+                            <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol Medium</span></button>
+                            <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol High</span></button>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="model-selector-note model-current-row">
+                        <span id="current-label">Use agent’s current model</span>
+                        <button type="button" role="switch" class="model-current-switch" aria-checked="true" aria-labelledby="current-label"><span></span></button>
+                      </div>
+                      <p class="model-selector-note dim">For future work in this project. Your agent app controls model switching.</p>
+                    </div>
+                  </div>
                 </div>
                 <p class="sugg-title"><span class="code">G-01</span> neurons · cortex · colliculus</p>
                 <p class="sugg-verdict">Confirmed gap</p>
                 <p class="sugg-note">105 demand papers and no review in this collection reaches this region. Worth a scoping search before you commit.</p>
                 <div class="sugg-actions"><button type="button" class="btn small primary">Accept</button><button type="button" class="btn small">Dismiss</button></div>
 
-                <div class="model-popover" id="model-pop" role="dialog" aria-label="Model for future work">
-                  <div class="model-selector" data-follow-current="true">
-                    <div class="model-provider" role="group" aria-label="Claude">
-                      <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark" width="16" height="16"><use href="#mark-claude"/></svg><span>Claude</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
-                      <div class="model-options">
-                        <button type="button" class="model-option" aria-pressed="true"><span>Claude Opus 5.5 Medium</span></button>
-                        <button type="button" class="model-option" aria-pressed="false"><span>Claude Opus 5.5 High</span></button>
-                      </div>
-                    </div>
-                    <div class="model-provider" role="group" aria-label="ChatGPT">
-                      <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark openai" width="16" height="16"><use href="#mark-openai"/></svg><span>ChatGPT</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
-                      <div class="model-options">
-                        <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol Medium</span></button>
-                        <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol High</span></button>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="model-selector-note model-current-row">
-                    <span id="current-label">Use agent’s current model</span>
-                    <button type="button" role="switch" class="model-current-switch" aria-checked="true" aria-labelledby="current-label"><span></span></button>
-                  </div>
-                  <p class="model-selector-note dim">For future work in this project. Your agent app controls model switching.</p>
-                </div>
               </div>
             </div>
           </div>
-          <figcaption>Try it: the model picker from the app. Example suggestion.</figcaption>
         </figure>
       </div>
     </section>
