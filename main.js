@@ -298,10 +298,10 @@ function heroMap() {
     zoomFrame = requestAnimationFrame(step);
   }
   const zoomAt = (f, px, py) => animateTo(zoomTo(view, view.s * f, px, py), 360);
-  function focusArea(area) {
+  function focusArea(area, done) {
     const radius = Math.max(1, area.radius * fit.k);
     const s = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, R * 0.3 / radius));
-    animateTo({ s, x: -(area.x - fit.cx) * fit.k * s, y: -(area.y - fit.cy) * fit.k * s }, 450);
+    animateTo({ s, x: -(area.x - fit.cx) * fit.k * s, y: -(area.y - fit.cy) * fit.k * s }, done ? 1400 : 450, done);
   }
 
   /* Hit testing, tooltips and the pinned card. */
@@ -355,17 +355,14 @@ function heroMap() {
     draw();
   }
 
-  /* Entrance: the squares flicker in as in the app, then the camera picks a random paper,
-     zooms in on it and opens its card. Any interaction first cancels the tour. */
+  /* Entrance: the squares flicker in as in the app, then the camera picks a random gap on the
+     visible part of the map, zooms to it and opens its card. Any interaction cancels the tour. */
   function intro() {
     if (introOver) return;
-    const picks = points.filter((p) => {
-      const [x, y] = toScreen(p.x, p.y);
-      return p.title && p.title.length < 140 && inside(x, y, R * 0.2) && x > W * 0.45 && x < W - 40 && y > 120 && y < H - 120;
-    });
-    if (!picks.length) return;
-    const p = picks[Math.floor(Math.random() * picks.length)], s = 7;
-    animateTo({ s, x: -(p.x - fit.cx) * fit.k * s, y: -(p.y - fit.cy) * fit.k * s }, 1400, () => { if (!introOver) { introOver = true; pin({ point: p }); } });
+    const onScreen = (gp) => { const [x, y] = toScreen(gp.x, gp.y); return inside(x, y, R * 0.15) && x > W * 0.45 && x < W - 40 && y > 100 && y < H - 100; };
+    const picks = gaps.filter(onScreen).length ? gaps.filter(onScreen) : gaps;
+    const gp = picks[Math.floor(Math.random() * picks.length)];
+    focusArea(gp.area, () => { if (!introOver) { introOver = true; pin({ gap: gp }); } });
   }
   const endIntro = () => { introOver = true; clearTimeout(introTimer); };
   for (const type of ["pointerdown", "wheel", "keydown", "gesturestart"]) canvas.addEventListener(type, endIntro, { capture: true });
