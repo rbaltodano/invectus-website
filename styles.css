@@ -131,8 +131,6 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 @media (max-width: 900px) { .search-demo { grid-template-columns: 1fr; } }
 .search-box { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 14px 16px; border: 1px solid var(--line-2); border-radius: var(--r); font-size: 16px; font-weight: 300; color: var(--ink); }
 .search-box svg { flex: none; color: var(--dim); }
-.caret { width: 1px; height: 18px; margin-left: -10px; background: var(--ink); animation: caret 1s steps(1) infinite; }
-@keyframes caret { 50% { opacity: 0; } }
 .search-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 28px; }
 .chip { border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--dim); font: inherit; font-size: 12.5px; padding: 6px 12px; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background 150ms ease; }
 .chip:hover, .chip:focus-visible { color: var(--ink); border-color: var(--ink); }
