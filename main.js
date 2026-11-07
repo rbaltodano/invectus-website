@@ -502,6 +502,160 @@ function downloadButton() {
   if (name) label.textContent = `Download for ${name}`;
 }
 
+/* ---------- inVectus search example: real precomputed checks, nearest papers on the map ---------- */
+function searchDemo() {
+  const D = window.INVECTUS_MAP, X = window.INVECTUS_SEARCH;
+  const root = document.querySelector(".search-demo");
+  if (!D || !X || !root) return;
+  const textEl = root.querySelector(".search-text"), chips = root.querySelector(".search-chips");
+  const verdictEl = root.querySelector(".verdict"), summaryEl = root.querySelector(".search-summary");
+  const hitsEl = root.querySelector(".hits"), metaEl = root.querySelector(".search-meta");
+  const canvas = root.querySelector(".search-map"), g = canvas.getContext("2d");
+  const ink = "#d1cbc2", accent = "#6edcaa", bg = "#141414", inkA = (a) => `rgba(209, 203, 194, ${a})`;
+  const VERDICT = { exists: "Exists · something very close is already here", near: "Near · related work, not the same thing", open: "Open · not found in this collection" };
+  const here = (t) => t.replace(/\bin papers\b/g, "in this collection");
+  const points = D.points;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const fit = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, extent: Math.max(x1 - x0, y1 - y0) };
+  const flicker = new DotFlicker();
+  let size = 0, view = { s: 1, x: 0, y: 0 }, cells = [], current, hot = -1, frame, cam, typing;
+
+  const k = () => (size * 0.94) / fit.extent;
+  const toScreen = (x, y) => [size / 2 + (x - fit.cx) * k() * view.s + view.x, size / 2 + (y - fit.cy) * k() * view.s + view.y];
+  const inside = (x, y, pad = 0) => (x - size / 2) ** 2 + (y - size / 2) ** 2 <= (size / 2 - pad) ** 2;
+
+  function rebuild() {
+    const CELL = HERO_CELL, cols = Math.ceil(size / CELL) + 2, grid = new Map();
+    points.forEach(([px, py], i) => {
+      const [x, y] = toScreen(px, py);
+      if (!inside(x, y, -6)) return;
+      const key = Math.floor(y / CELL) * cols + Math.floor(x / CELL), c = grid.get(key);
+      if (c) { c.x += x; c.y += y; c.n++; } else grid.set(key, { x, y, n: 1, i });
+    });
+    cells = [...grid.values()].map((c) => ({ x: c.x / c.n, y: c.y / c.n, n: c.n, key: `p:${c.i}` }));
+    const keys = cells.map((c) => c.key);
+    if (current) current.hits.forEach((h) => keys.push(`hit:${current.query}:${h.point}`)), keys.push(`q:${current.query}`);
+    flicker.sync(keys, performance.now());
+    draw();
+  }
+  const queryPos = (ex) => { // similarity-weighted centre of the nearest papers: approximate, display only
+    let sx = 0, sy = 0, sw = 0;
+    for (const h of ex.hits) { const w = h.similarity ** 8; sx += points[h.point][0] * w; sy += points[h.point][1] * w; sw += w; }
+    return [sx / sw, sy / sw];
+  };
+
+  function draw() {
+    cancelAnimationFrame(frame);
+    const now = performance.now(), R = size / 2, op = (key) => flicker.opacity(key, now);
+    g.clearRect(0, 0, size, size);
+    g.save(); g.beginPath(); g.arc(R, R, R - 1, 0, Math.PI * 2); g.clip();
+    g.fillStyle = ink;
+    for (const c of cells) {
+      const s = heroSide(c.n);
+      g.globalAlpha = (current ? 0.32 : 0.62) * op(c.key);
+      g.fillRect(c.x - s / 2, c.y - s / 2, s, s);
+    }
+    if (current) {
+      g.font = LABEL_FONT; g.textBaseline = "middle";
+      const placed = []; // label boxes, so close papers don't print over each other
+      const order = current.hits.map((h, i) => i).sort((a, b) => (b === hot) - (a === hot));
+      order.forEach((i) => { const h = current.hits[i];
+        const [x, y] = toScreen(points[h.point][0], points[h.point][1]);
+        const on = i === hot;
+        g.globalAlpha = op(`hit:${current.query}:${h.point}`);
+        g.strokeStyle = accent; g.fillStyle = accent; g.lineWidth = on ? 2 : 1.25;
+        const r = on ? 7 : 5;
+        g.beginPath(); g.moveTo(x - r, y - r); g.lineTo(x + r, y + r); g.moveTo(x + r, y - r); g.lineTo(x - r, y + r); g.stroke();
+        const box = { x: x + 7, y: y - 14, w: 30, h: 14 };
+        if (placed.some((b) => box.x < b.x + b.w && b.x < box.x + box.w && box.y < b.y + b.h && b.y < box.y + box.h)) return;
+        placed.push(box);
+        g.lineWidth = 3; g.strokeStyle = bg; g.strokeText(h.similarity.toFixed(2), x + 9, y - 7);
+        g.fillText(h.similarity.toFixed(2), x + 9, y - 7);
+      });
+      const [qx0, qy0] = queryPos(current), [qx, qy] = toScreen(qx0, qy0);
+      g.globalAlpha = op(`q:${current.query}`);
+      g.shadowColor = accent; g.shadowBlur = 16; g.strokeStyle = accent; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(qx - 8, qy); g.lineTo(qx + 8, qy); g.moveTo(qx, qy - 8); g.lineTo(qx, qy + 8); g.stroke();
+      g.shadowBlur = 0; g.fillStyle = accent; g.fillText("QUERY", qx + 11, qy + 11);
+    }
+    g.globalAlpha = 1; g.restore();
+    g.strokeStyle = ink; g.lineWidth = 1; g.beginPath(); g.arc(R, R, R - 1, 0, Math.PI * 2); g.stroke();
+    if (flicker.pending(now)) frame = requestAnimationFrame(draw);
+  }
+
+  // Camera: centre the nearest papers and fit them, as the app focuses a region.
+  function focus(ex) {
+    const [cx, cy] = queryPos(ex);
+    let r = 0; for (const h of ex.hits) r = Math.max(r, Math.hypot(points[h.point][0] - cx, points[h.point][1] - cy));
+    const s = Math.min(14, Math.max(1, (size * 0.3) / Math.max(1e-6, r * k())));
+    const target = { s, x: -(cx - fit.cx) * k() * s, y: -(cy - fit.cy) * k() * s };
+    cancelAnimationFrame(cam);
+    if (reduced) { view = target; rebuild(); return; }
+    const start = view, t0 = performance.now();
+    const step = (now) => {
+      const p = Math.min(1, (now - t0) / 700), e = p * p * (3 - 2 * p), sc = start.s * Math.pow(target.s / start.s, e);
+      view = { s: sc, x: (start.x / start.s + (target.x / target.s - start.x / start.s) * e) * sc, y: (start.y / start.s + (target.y / target.s - start.y / start.s) * e) * sc };
+      rebuild();
+      if (p < 1) cam = requestAnimationFrame(step);
+    };
+    cam = requestAnimationFrame(step);
+  }
+
+  function show(ex, chip) {
+    chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
+    clearInterval(typing);
+    current = undefined; hot = -1; hitsEl.innerHTML = ""; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = "";
+    const reveal = () => {
+      current = ex;
+      verdictEl.className = `verdict ${ex.verdict}`;
+      verdictEl.textContent = VERDICT[ex.verdict];
+      summaryEl.textContent = `${here(ex.summary)} ${ex.next_step}`;
+      hitsEl.innerHTML = ex.hits.map((h, i) => `<li style="--i:${i}" data-i="${i}"><span class="score${i === 0 ? " top" : ""}">${h.similarity.toFixed(2)}</span><span>${esc(h.title)}<em>${h.year} · ${h.role}</em><span class="meter"><span style="--w:${Math.max(0.05, (h.similarity - 0.5) / 0.5).toFixed(3)}"></span></span></span></li>`).join("");
+      metaEl.textContent = `Compared with all ${fmt(ex.compared)} stored vectors, exactly. Probability it exists: ${ex.p_exists.toFixed(2)}. ${ex.position} Calibration: ${ex.calibration}`;
+      focus(ex);
+    };
+    if (reduced) { textEl.textContent = ex.query; reveal(); return; }
+    let n = 0; textEl.textContent = "";
+    typing = setInterval(() => { textEl.textContent = ex.query.slice(0, ++n); if (n >= ex.query.length) { clearInterval(typing); setTimeout(reveal, 180); } }, 22);
+  }
+
+  chips.innerHTML = X.map((ex, i) => `<button type="button" class="chip" aria-pressed="false" data-i="${i}">${esc(ex.query)}</button>`).join("");
+  chips.addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (b) show(X[+b.dataset.i], b); });
+  const setHot = (i) => { hot = i; hitsEl.querySelectorAll("li").forEach((li) => li.classList.toggle("on", +li.dataset.i === i)); draw(); };
+  hitsEl.addEventListener("pointerover", (e) => { const li = e.target.closest("li"); if (li) setHot(+li.dataset.i); });
+  hitsEl.addEventListener("pointerleave", () => setHot(-1));
+  canvas.addEventListener("pointermove", (e) => {
+    if (!current) return;
+    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = -1, bd = 144;
+    current.hits.forEach((h, i) => { const [hx, hy] = toScreen(points[h.point][0], points[h.point][1]); const d = (hx - x) ** 2 + (hy - y) ** 2; if (d < bd) { bd = d; best = i; } });
+    if (best !== hot) setHot(best);
+  });
+  canvas.addEventListener("pointerleave", () => setHot(-1));
+
+  function resize() {
+    const w = canvas.getBoundingClientRect().width, dpr = window.devicePixelRatio || 1;
+    if (!w || w === size) return;
+    size = w; canvas.width = Math.round(w * dpr); canvas.height = Math.round(w * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (current) focus(current); else rebuild();
+  }
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+  // Start the first example when the section comes into view.
+  const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); show(X[0], chips.querySelector(".chip")); } }, { threshold: 0.3 });
+  io.observe(root);
+}
+
+/* ---------- Copy the install command ---------- */
+function copyButtons() {
+  document.querySelectorAll(".copy[data-copy]").forEach((b) => b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(b.dataset.copy); } catch { return; }
+    b.classList.add("done"); b.setAttribute("aria-label", "Copied");
+    setTimeout(() => { b.classList.remove("done"); b.setAttribute("aria-label", "Copy command"); }, 1600);
+  }));
+}
+
 /* ---------- Reveal on scroll ---------- */
 function reveals() {
   const io = new IntersectionObserver((entries) => entries.forEach((e) => {
@@ -513,5 +667,7 @@ function reveals() {
 heroMap();
 document.querySelectorAll(".shimmer").forEach(shimmer);
 modelPicker();
+searchDemo();
+copyButtons();
 downloadButton();
 reveals();

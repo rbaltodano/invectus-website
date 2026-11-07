@@ -59,41 +59,40 @@
     <section id="features" class="fold reveal" aria-labelledby="features-title">
       <div class="wrap">
         <h2 id="features-title">One workspace, from import to decision.</h2>
-        <ol class="ranks">
-          <li style="--i:0"><span class="code">01</span><div><h3>Bring your own collection</h3><p>Import CSV/TSV, Parquet, or folders of text and Markdown. Map columns and mark items as demand, coverage or neutral.</p></div></li>
-          <li style="--i:1"><span class="code">02</span><div><h3>Search by meaning</h3><p>Compare an idea with your collection, inspect the nearest items, and read an experimental calibrated <em>exists / near / open</em> assessment.</p></div></li>
-          <li style="--i:2"><span class="code">03</span><div><h3>Explore potential gaps</h3><p>Browse coverage gaps, stale coverage and bridges between related regions, each with its evidence and a score breakdown.</p></div></li>
-          <li style="--i:3"><span class="code">04</span><div><h3>Keep your decisions</h3><p>Bookmark gaps, record notes and verdicts, and return to saved work after rescanning.</p></div></li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="shot reveal" aria-label="Screenshot">
-      <div class="wrap">
-        <figure>
-          <img class="mac-shot" src="assets/ophthalmology-gap.png" alt="inVectus showing ranked gaps beside an interactive collection map" loading="lazy" width="3216" height="2090">
-          <figcaption>Native macOS view of a 5,000-paper ophthalmology collection. Gap scores are collection-level candidates for review, not validated discoveries.</figcaption>
-        </figure>
+        <div class="feature-split">
+          <figure class="feature-shot">
+            <img class="mac-shot" src="assets/ophthalmology-gap.png" alt="inVectus showing a coverage gap beside the collection map" data-caption="Native macOS view of a 5,000-paper ophthalmology collection. Gap scores are collection-level candidates for review, not validated discoveries." loading="lazy" width="3216" height="2090">
+          </figure>
+          <ol class="ranks">
+            <li style="--i:0"><span class="code">01</span><div><h3>Bring your own collection</h3><p>Import CSV/TSV, Parquet, or folders of text and Markdown. Map columns and mark items as demand, coverage or neutral.</p></div></li>
+            <li style="--i:1"><span class="code">02</span><div><h3>Search by meaning</h3><p>Compare an idea with your collection, inspect the nearest items, and read an experimental calibrated <em>exists / near / open</em> assessment.</p></div></li>
+            <li style="--i:2"><span class="code">03</span><div><h3>Explore potential gaps</h3><p>Browse coverage gaps, stale coverage and bridges between related regions, each with its evidence and a score breakdown.</p></div></li>
+            <li style="--i:3"><span class="code">04</span><div><h3>Keep your decisions</h3><p>Bookmark gaps, record notes and verdicts, and return to saved work after rescanning.</p></div></li>
+          </ol>
+        </div>
       </div>
     </section>
 
     <section class="verdicts reveal" aria-labelledby="verdict-title">
-      <div class="wrap split">
-        <div>
+      <div class="wrap">
+        <div class="verdict-intro">
           <h2 id="verdict-title">Does this idea already exist here?</h2>
-          <p>Type an idea and see its nearest items, with similarity scores and a verdict calibrated on your own collection. Search can compare every stored vector exactly, so nothing is hidden behind an approximate index.</p>
-          <p class="dim">Verdicts hold for this collection only. They never imply global novelty or legal clearance.</p>
+          <p>Pick an idea. inVectus compares it with every paper in the same 5,000-paper collection, shows the nearest ones on the map and gives a verdict calibrated on that collection.</p>
         </div>
-        <div class="demo-search" aria-label="Example search result">
-          <div class="query"><span class="eyebrow">Query</span>Low-dose atropine for myopia in adults</div>
-          <p class="verdict open">Open · limited coverage in this collection</p>
-          <ul class="hits">
-            <li style="--i:0"><span class="score top">0.71</span><span>Atropine 0.01% and axial elongation in children <em>2021 · coverage</em><span class="meter"><span style="--w:.71"></span></span></span></li>
-            <li style="--i:1"><span class="score">0.64</span><span>Myopia progression in young adults <em>2019 · demand</em><span class="meter"><span style="--w:.64"></span></span></span></li>
-            <li style="--i:2"><span class="score">0.58</span><span>Orthokeratology versus spectacle lenses <em>2022 · coverage</em><span class="meter"><span style="--w:.58"></span></span></span></li>
-          </ul>
-          <p class="figure-note">Illustrative example</p>
+        <div class="search-demo">
+          <div class="search-side">
+            <div class="search-box" aria-live="polite"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="search-text"></span><span class="caret" aria-hidden="true"></span></div>
+            <div class="search-chips" role="group" aria-label="Example ideas"></div>
+            <div class="search-result">
+              <p class="verdict"></p>
+              <p class="search-summary"></p>
+              <ol class="hits"></ol>
+              <p class="search-meta"></p>
+            </div>
+          </div>
+          <div class="search-map-wrap"><canvas class="search-map" role="img" aria-label="The nearest papers on the collection map; positions are for browsing only"></canvas></div>
         </div>
+        <p class="figure-note">Real results from <code>invectus check</code> on the Ophthalmology Research collection, precomputed for these examples. Verdicts hold for this collection only; they never imply global novelty.</p>
       </div>
     </section>
 
@@ -169,20 +168,22 @@
     </section>
 
     <section class="get reveal" aria-labelledby="get-title">
-      <div class="wrap split">
-        <div>
-          <h2 id="get-title">Build it from source.</h2>
-          <p>Tested locally on Apple Silicon macOS. Windows and Linux builds are targets, not yet verified. Signed installers are a later milestone.</p>
-          <div class="actions">
-            <a class="btn primary" href="https://github.com/rbaltodano/inVectus#build-from-source">Build instructions</a>
-            <a class="btn" href="https://github.com/rbaltodano/inVectus/blob/main/PROGRESS.md">Read the progress log</a>
-          </div>
+      <div class="wrap get-center">
+        <h2 id="get-title">Run it on your own computer.</h2>
+        <p class="get-lede">Free and open source. Your collection never leaves your machine.</p>
+        <div class="install">
+          <code class="install-cmd"><span class="dim">$</span> git clone https://github.com/rbaltodano/inVectus.git &amp;&amp; cd inVectus</code>
+          <button type="button" class="copy" aria-label="Copy command" data-copy="git clone https://github.com/rbaltodano/inVectus.git &amp;&amp; cd inVectus">
+            <svg class="i-copy" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M16 8V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h3" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            <svg class="i-done" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
         </div>
-        <pre class="term">git clone https://github.com/rbaltodano/inVectus.git
-cd inVectus
-npm ci &amp;&amp; npm run build
-cargo build --workspace --release --locked
-npm run tauri dev</pre>
+        <p class="install-note">Then build from source · tested on Apple Silicon macOS · Windows and Linux not yet verified</p>
+        <div class="pills">
+          <a class="pill" href="https://github.com/rbaltodano/inVectus#build-from-source">Build steps <span aria-hidden="true">›</span></a>
+          <a class="pill" href="https://github.com/rbaltodano/inVectus/blob/main/PROGRESS.md">Progress log <span aria-hidden="true">›</span></a>
+          <a class="pill" href="https://github.com/rbaltodano/inVectus">Source <span aria-hidden="true">›</span></a>
+        </div>
       </div>
     </section>
   </main>
@@ -195,6 +196,7 @@ npm run tauri dev</pre>
   </footer>
 
   <script src="assets/ophthalmology-map.js" defer></script>
+  <script src="assets/search-examples.js" defer></script>
   <script src="main.js" defer></script>
   <script src="lightbox.js" defer></script>
 </body>

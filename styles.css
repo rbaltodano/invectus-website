@@ -105,7 +105,8 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
 .hero-tip span { color: var(--dim); }
 
 /* Sections below the fold sit on a solid surface, so they cut the circle. */
-main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg); border-top: 1px solid var(--line); padding: clamp(72px, 11vw, 140px) 0; }
+main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg); padding: clamp(72px, 11vw, 140px) 0; }
+main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 
 /* Ranked rows, like the gap list */
 .ranks { list-style: none; margin: 40px 0 0; padding: 0; display: grid; grid-template-columns: repeat(2, 1fr); column-gap: clamp(32px, 6vw, 96px); }
@@ -115,23 +116,62 @@ main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg
 .ranks p { color: var(--dim); margin: 0; }
 @media (max-width: 760px) { .ranks { grid-template-columns: 1fr; } }
 
-.shot figure { margin: 0; }
-/* Window captures carry a transparent shadow margin; widen them so the window itself lines up. */
-.shot img.mac-shot { display: block; width: 108%; max-width: none; height: auto; margin: 0 -4%; }
-.shot figcaption { margin-top: 16px; font-size: 13px; color: var(--dim); max-width: 70ch; }
+/* Features: the app screenshot beside the four points. */
+.feature-split { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: center; margin-top: 40px; }
+.feature-shot { margin: 0; }
+.feature-shot img.mac-shot { display: block; width: 108%; max-width: none; height: auto; margin: 0 -4%; }
+.feature-split .ranks { grid-template-columns: 1fr; margin: 0; }
+@media (max-width: 960px) { .feature-split { grid-template-columns: 1fr; } }
 
-/* Search example */
-.demo-search { border-top: 1px solid var(--line); }
-.demo-search .query { display: grid; gap: 4px; padding: 20px 0; font-size: 17px; font-weight: 300; border-bottom: 1px solid var(--line); }
-.demo-search .query .eyebrow { margin: 0; }
-.verdict { display: inline-flex; align-items: center; gap: 8px; margin: 20px 0 8px; font-size: 14px; }
+/* inVectus search, interactive: precomputed real checks, results on the map. */
+.verdict-intro { max-width: 640px; }
+.search-demo { display: grid; grid-template-columns: minmax(0, 6fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: start; margin-top: 40px; }
+@media (max-width: 900px) { .search-demo { grid-template-columns: 1fr; } }
+.search-box { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 14px 16px; border: 1px solid var(--line-2); border-radius: var(--r); font-size: 16px; font-weight: 300; color: var(--ink); }
+.search-box svg { flex: none; color: var(--dim); }
+.caret { width: 1px; height: 18px; margin-left: -10px; background: var(--ink); animation: caret 1s steps(1) infinite; }
+@keyframes caret { 50% { opacity: 0; } }
+.search-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 28px; }
+.chip { border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--dim); font: inherit; font-size: 12.5px; padding: 6px 12px; cursor: pointer; transition: color 150ms ease, border-color 150ms ease, background 150ms ease; }
+.chip:hover, .chip:focus-visible { color: var(--ink); border-color: var(--ink); }
+.chip[aria-pressed="true"] { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.search-result { min-height: 420px; }
+.verdict { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 15px; }
 .verdict::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .verdict.open { color: var(--accent); }
+.verdict.near { color: var(--ink); }
+.verdict.exists { color: var(--ink); }
+.verdict.exists::before { box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.15); }
+.search-summary { font-size: 13.5px; color: var(--dim); margin-bottom: 16px; }
 .hits { list-style: none; margin: 0; padding: 0; }
-.hits li { display: flex; align-items: baseline; gap: 20px; padding: 16px 0; border-top: 1px solid var(--line); font-size: 13.5px; }
-.hits li:first-child { border-top: none; }
+.hits li { display: flex; align-items: baseline; gap: 20px; padding: 14px 0; border-top: 1px solid var(--line); font-size: 13.5px; cursor: default; animation: gap-slide-in 300ms ease-out both; animation-delay: calc(var(--i, 0) * 50ms); transition: color 150ms ease; }
+.hits li:hover, .hits li.on { color: #fff; }
+.hits li:hover .score, .hits li.on .score { color: var(--ink); }
 .hits > li > span:last-child { display: grid; gap: 4px; flex: 1; }
 .hits em { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.search-meta { margin: 12px 0 0; font-size: 11.5px; color: var(--dim); }
+.search-map-wrap { position: sticky; top: 24px; }
+.search-map { display: block; width: 100%; aspect-ratio: 1; }
+.verdicts .figure-note { margin-top: 32px; font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; }
+
+/* Get it: a centred install line with pill links (after Grok Build's layout). */
+.get-center { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.get-center h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; letter-spacing: -0.03em; max-width: 14ch; margin-bottom: 20px; }
+.get-lede { max-width: none; font-size: clamp(16px, 1.5vw, 19px); font-weight: 300; color: var(--ink); margin: 0 auto 36px; }
+.install { display: flex; align-items: center; gap: 12px; width: min(620px, 100%); padding: 16px 16px 16px 22px; background: var(--surface); border: 1px solid var(--line-2); border-radius: 12px; }
+.install-cmd { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-align: left; font-family: var(--mono); font-size: 14px; color: var(--ink); background: none; padding: 0;
+  -webkit-mask-image: linear-gradient(to right, #000 85%, transparent); mask-image: linear-gradient(to right, #000 85%, transparent); }
+.install-cmd .dim { color: var(--dim); }
+.copy { flex: none; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: none; color: var(--ink); cursor: pointer; }
+.copy:hover, .copy:focus-visible { background: var(--surface-2); }
+.copy .i-done { display: none; color: var(--accent); }
+.copy.done .i-copy { display: none; }
+.copy.done .i-done { display: block; }
+.install-note { max-width: none; margin: 16px auto 20px; font-size: 13px; color: var(--dim); }
+.pills { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 999px; background: var(--surface); color: var(--dim); font-size: 14px; text-decoration: none; transition: color 150ms ease, background 150ms ease; }
+.pill:hover, .pill:focus-visible { color: var(--ink); background: var(--surface-2); }
+
 .score { flex: 0 0 64px; font-size: 24px; font-weight: 200; line-height: 1; }
 .score.top { color: var(--accent); }
 .meter { display: block; height: 2px; background: var(--line); margin-top: 6px; }
@@ -206,12 +246,9 @@ main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg
 /* Reveal on scroll: the app's page-in and gap-slide-in, with its stagger. */
 .reveal .wrap { opacity: 0; transform: translateY(8px); }
 .reveal.in .wrap { animation: page-in var(--spring-relaxed-duration) var(--spring-relaxed) both; }
-.reveal .ranks li, .reveal .figures > div, .reveal .hits li { opacity: 0; }
-.reveal.in .ranks li, .reveal.in .figures > div, .reveal.in .hits li { animation: gap-slide-in 300ms ease-out both; animation-delay: calc(160ms + var(--i, 0) * 50ms); }
-.reveal .meter > span { transform: scaleX(0); }
-.reveal.in .meter > span { animation: fill-x 550ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(320ms + var(--i, 0) * 110ms); }
-.hits li:nth-child(2) .meter > span { --i: 1; }
-.hits li:nth-child(3) .meter > span { --i: 2; }
+.reveal .ranks li, .reveal .figures > div { opacity: 0; }
+.reveal.in .ranks li, .reveal.in .figures > div { animation: gap-slide-in 300ms ease-out both; animation-delay: calc(160ms + var(--i, 0) * 50ms); }
+.hits .meter > span { animation: fill-x 550ms cubic-bezier(0.22, 1, 0.36, 1) both; animation-delay: calc(120ms + var(--i, 0) * 110ms); }
 
 @keyframes page-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
 @keyframes gap-slide-in { from { transform: translateX(-8px); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -221,8 +258,7 @@ main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
-  .reveal .wrap, .reveal .ranks li, .reveal .figures > div, .reveal .hits li { opacity: 1; transform: none; }
-  .reveal .meter > span { transform: none; }
+  .reveal .wrap, .reveal .ranks li, .reveal .figures > div { opacity: 1; transform: none; }
 }
 
 /* lightbox.js (from the Angrove site): a clicked photo grows to fill the screen over a darkened page. */
