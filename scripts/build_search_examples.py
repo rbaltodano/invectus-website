@@ -30,7 +30,7 @@ def main(map_path, out_path, *queries):
             "query": d["search"]["query"], "verdict": d["verdict"], "p_exists": round(d["p_exists"], 2),
             "summary": d["summary"], "next_step": d["next_step"], "position": d["position"],
             "calibration": d["calibration"]["quality"], "compared": d["search"]["vectors_compared"],
-            "hits": hits[:5],
+            "hits": hits[:3],
         })
     with open(out_path, "w") as f:
         f.write("window.INVECTUS_SEARCH=")
