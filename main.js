@@ -519,7 +519,7 @@ function searchDemo() {
   for (const [x, y] of points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
   const fit = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, extent: Math.max(x1 - x0, y1 - y0) };
   const flicker = new DotFlicker();
-  let size = 0, view = { s: 1, x: 0, y: 0 }, cells = [], current, hot = -1, frame, cam, typing;
+  let size = 0, view = { s: 1, x: 0, y: 0 }, cells = [], current, hot = -1, frame, cam, typing, clearResults, revealTimer;
 
   const k = () => (size * 0.94) / fit.extent;
   const toScreen = (x, y) => [size / 2 + (x - fit.cx) * k() * view.s + view.x, size / 2 + (y - fit.cy) * k() * view.s + view.y];
@@ -605,15 +605,20 @@ function searchDemo() {
   function show(ex, chip) {
     chips.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", String(c === chip)));
     clearInterval(typing);
+    clearTimeout(clearResults); clearTimeout(revealTimer);
+    stopCountdown();
+    if (!reduced) chip.querySelector(".chip-label").animate(
+      [{ opacity: 0.6, transform: "translateY(3px)" }, { opacity: 1, transform: "translateY(0)" }],
+      { duration: 300, easing: "ease-out" }
+    );
     // Fade the old verdict, summary and results out while the new idea types in; clear them
     // only once they are invisible, so the verdict dot leaves with the text.
     const result = root.querySelector(".search-result"), note = root.parentElement.querySelector(".figure-note");
     result.classList.add("fading"); note?.classList.add("fading");
-    clearTimeout(auto);
     current = undefined; hot = -1; draw();
-    const clear = setTimeout(() => { hitsEl.innerHTML = ""; verdictEl.className = "verdict"; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = ""; }, reduced ? 0 : 200);
+    clearResults = setTimeout(() => { hitsEl.innerHTML = ""; verdictEl.className = "verdict"; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = ""; }, reduced ? 0 : 200);
     const reveal = () => {
-      clearTimeout(clear);
+      clearTimeout(clearResults);
       current = ex;
       verdictEl.className = `verdict ${ex.verdict}`;
       verdictEl.textContent = VERDICT[ex.verdict];
@@ -626,25 +631,43 @@ function searchDemo() {
     };
     if (reduced) { textEl.textContent = ex.query; reveal(); return; }
     let n = 0; textEl.textContent = "";
-    typing = setInterval(() => { textEl.textContent = ex.query.slice(0, ++n); if (n >= ex.query.length) { clearInterval(typing); setTimeout(reveal, 180); } }, 22);
+    typing = setInterval(() => { textEl.textContent = ex.query.slice(0, ++n); if (n >= ex.query.length) { clearInterval(typing); revealTimer = setTimeout(reveal, 180); } }, 22);
   }
 
-  // Cycle through the examples every 5 s while the section is on screen and not being pointed at.
-  let auto, visible = false, pointing = false;
+  // One animation drives both the next capsule's fill and the 5 s countdown.
+  // Pausing it preserves the remaining time, keeping the fill and switch in sync.
+  let countdown, nextChip, visible = false, pointing = false;
+  function stopCountdown() {
+    if (countdown) { countdown.onfinish = null; countdown.cancel(); countdown = undefined; }
+    nextChip?.classList.remove("is-next");
+    nextChip = undefined;
+  }
+  function syncCountdown() {
+    if (!countdown) return;
+    const paused = !visible || pointing || document.hidden || chips.contains(document.activeElement);
+    if (paused) countdown.pause(); else countdown.play();
+  }
   function schedule() {
-    clearTimeout(auto);
+    stopCountdown();
     if (reduced) return;
-    auto = setTimeout(() => {
-      if (!visible || pointing) return schedule();
-      const i = (X.indexOf(current) + 1) % X.length;
-      show(X[i], chips.querySelectorAll(".chip")[i]);
-    }, 5000);
+    const i = (X.indexOf(current) + 1) % X.length;
+    nextChip = chips.querySelectorAll(".chip")[i];
+    nextChip.classList.add("is-next");
+    countdown = nextChip.querySelector(".chip-fill").animate(
+      [{ transform: "scaleX(0)" }, { transform: "scaleX(1)" }],
+      { duration: 5000, easing: "linear", fill: "forwards" }
+    );
+    countdown.onfinish = () => show(X[i], nextChip);
+    syncCountdown();
   }
-  root.addEventListener("pointerenter", () => { pointing = true; });
-  root.addEventListener("pointerleave", () => { pointing = false; });
-  new IntersectionObserver((entries) => { visible = entries.some((e) => e.isIntersecting); }, { threshold: 0.2 }).observe(root);
+  root.addEventListener("pointerenter", () => { pointing = true; syncCountdown(); });
+  root.addEventListener("pointerleave", () => { pointing = false; syncCountdown(); });
+  chips.addEventListener("focusin", syncCountdown);
+  chips.addEventListener("focusout", () => queueMicrotask(syncCountdown));
+  document.addEventListener("visibilitychange", syncCountdown);
+  new IntersectionObserver((entries) => { visible = entries.some((e) => e.isIntersecting); syncCountdown(); }, { threshold: 0.2 }).observe(root);
 
-  chips.innerHTML = X.map((ex, i) => `<button type="button" class="chip" aria-pressed="false" data-i="${i}">${esc(ex.query)}</button>`).join("");
+  chips.innerHTML = X.map((ex, i) => `<button type="button" class="chip" aria-pressed="false" data-i="${i}"><span class="chip-fill" aria-hidden="true"></span><span class="chip-label">${esc(ex.query)}</span></button>`).join("");
   chips.addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (b) show(X[+b.dataset.i], b); });
   const setHot = (i) => { hot = i; hitsEl.querySelectorAll("li").forEach((li) => li.classList.toggle("on", +li.dataset.i === i)); draw(); };
   hitsEl.addEventListener("pointerover", (e) => { const li = e.target.closest("li"); if (li) setHot(+li.dataset.i); });
