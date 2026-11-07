@@ -123,7 +123,7 @@ function heroMap() {
   let W = 0, H = 0, R = 0, A = { x: 0, y: 0 }, cells = [], frame = 0, zoomFrame;
   let view = { s: START_ZOOM, x: 0, y: 0 }, hover, pinned, drag, pinch;
   const t0 = performance.now();
-  let phase = reduced ? "done" : "index";
+  let phase = "done", laidOut = false, introTimer, introOver = false;
 
   const toScreen = (x, y) => [A.x + (x - fit.cx) * fit.k * view.s + view.x, A.y + (y - fit.cy) * fit.k * view.s + view.y];
   const inside = (x, y, pad = 0) => (x - W) ** 2 + (y - H) ** 2 <= (R - pad) ** 2;
@@ -140,11 +140,12 @@ function heroMap() {
     // The data sits in the visible quadrant of the circle, centred on it.
     A = { x: W - R * 0.5, y: H - R * 0.5 };
     fit.k = (R * 0.86) / fit.extent;
-    view = { s: START_ZOOM, x: 0, y: 0 };
+    if (!laidOut) { view = { s: START_ZOOM, x: 0, y: 0 }; laidOut = true; }
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     rebuild();
+    if (pinned) placeCard();
   }
 
   // Group items in a screen grid, one square per occupied cell. The app also merges squares
@@ -230,6 +231,8 @@ function heroMap() {
         const [x, y] = toScreen(r.x, r.y);
         if (!inside(x, y, 30) || x < 0 || y < 0 || x > W || y > H) continue;
         const text = r.label.split(" · ").slice(0, 2).join(" · ");
+        const half = g.measureText(text).width / 2 + 4, ty = y - rr - 8;
+        if (!inside(x - half, ty) || !inside(x + half, ty) || x - half < 0 || x + half > W) continue;
         g.globalAlpha = Math.min(1, (rr - 46) / 30);
         g.lineWidth = 3; g.strokeStyle = BG; g.strokeText(text, x, y - rr - 8);
         g.fillStyle = white(0.75); g.fillText(text, x, y - rr - 8);
@@ -281,15 +284,16 @@ function heroMap() {
     return clampPan({ s, x: px - A.x - (px - A.x - v.x) * k, y: py - A.y - (py - A.y - v.y) * k });
   };
   const stopZoom = () => { if (zoomFrame) cancelAnimationFrame(zoomFrame); zoomFrame = undefined; };
-  function animateTo(target, ms) {
+  function animateTo(target, ms, done) {
     stopZoom();
-    if (reduced) { setView(target); return; }
+    if (reduced) { setView(target); done?.(); return; }
     const start = view, started = performance.now();
     const step = (now) => {
       const p = Math.min(1, (now - started) / ms), e = p * p * (3 - 2 * p);
       const s = start.s * Math.pow(target.s / start.s, e);
       setView({ s, x: (start.x / start.s + (target.x / target.s - start.x / start.s) * e) * s, y: (start.y / start.s + (target.y / target.s - start.y / start.s) * e) * s });
       zoomFrame = p < 1 ? requestAnimationFrame(step) : undefined;
+      if (p === 1) done?.();
     };
     zoomFrame = requestAnimationFrame(step);
   }
@@ -350,6 +354,22 @@ function heroMap() {
     tip.style.left = `${Math.min(x + 14, W - 250)}px`; tip.style.top = `${Math.min(y + 14, H - 80)}px`;
     draw();
   }
+
+  /* Entrance: the squares flicker in as in the app, then the camera picks a random paper,
+     zooms in on it and opens its card. Any interaction first cancels the tour. */
+  function intro() {
+    if (introOver) return;
+    const picks = points.filter((p) => {
+      const [x, y] = toScreen(p.x, p.y);
+      return p.title && p.title.length < 140 && inside(x, y, R * 0.2) && x > W * 0.45 && x < W - 40 && y > 120 && y < H - 120;
+    });
+    if (!picks.length) return;
+    const p = picks[Math.floor(Math.random() * picks.length)], s = 7;
+    animateTo({ s, x: -(p.x - fit.cx) * fit.k * s, y: -(p.y - fit.cy) * fit.k * s }, 1400, () => { if (!introOver) { introOver = true; pin({ point: p }); } });
+  }
+  const endIntro = () => { introOver = true; clearTimeout(introTimer); };
+  for (const type of ["pointerdown", "wheel", "keydown", "gesturestart"]) canvas.addEventListener(type, endIntro, { capture: true });
+  hero.querySelectorAll(".map-controls button").forEach((b) => b.addEventListener("click", endIntro, { capture: true }));
 
   canvas.addEventListener("pointerdown", (e) => {
     const [x, y] = at(e);
@@ -419,6 +439,7 @@ function heroMap() {
   new ResizeObserver(() => { clearTimeout(resizeTimer); resizeTimer = setTimeout(layout, 80); }).observe(hero);
   document.fonts?.ready.then(draw);
   layout();
+  introTimer = setTimeout(intro, reduced ? 300 : DOT_DELAY_MS + DOT_FLICKER_MS + 900);
 }
 
 /* ---------- Terminal-style shimmer (src/agents.tsx) ---------- */
