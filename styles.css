@@ -314,3 +314,5 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .app-window .attr-wrap { position: relative; }
 .app-window .model-popover { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; margin: 0; width: 280px; max-width: calc(100vw - 32px); }
 #agents .figures { margin-top: clamp(64px, 8vw, 112px); }
+.verdicts .figure-note { transition: opacity 300ms ease; }
+.verdicts .figure-note.fading { opacity: 0; transition-duration: 200ms; }

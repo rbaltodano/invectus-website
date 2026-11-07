@@ -607,8 +607,9 @@ function searchDemo() {
     clearInterval(typing);
     // Fade the old verdict, summary and results out while the new idea types in; clear them
     // only once they are invisible, so the verdict dot leaves with the text.
-    const result = root.querySelector(".search-result");
-    result.classList.add("fading");
+    const result = root.querySelector(".search-result"), note = root.parentElement.querySelector(".figure-note");
+    result.classList.add("fading"); note?.classList.add("fading");
+    clearTimeout(auto);
     current = undefined; hot = -1; draw();
     const clear = setTimeout(() => { hitsEl.innerHTML = ""; verdictEl.className = "verdict"; verdictEl.textContent = ""; summaryEl.textContent = ""; metaEl.textContent = ""; }, reduced ? 0 : 200);
     const reveal = () => {
@@ -620,12 +621,28 @@ function searchDemo() {
       hitsEl.innerHTML = ex.hits.map((h, i) => `<li style="--i:${i}" data-i="${i}"><span class="score${i === 0 ? " top" : ""}">${h.similarity.toFixed(2)}</span><span>${esc(h.title)}<em>${h.year} · ${h.role}</em><span class="meter"><span style="--w:${Math.max(0.05, (h.similarity - 0.5) / 0.5).toFixed(3)}"></span></span></span></li>`).join("");
       metaEl.textContent = `Compared with all ${fmt(ex.compared)} stored vectors, exactly. Probability it exists: ${ex.p_exists.toFixed(2)}. ${ex.position} Calibration: ${ex.calibration}`;
       focus(ex);
-      requestAnimationFrame(() => result.classList.remove("fading"));
+      requestAnimationFrame(() => { result.classList.remove("fading"); note?.classList.remove("fading"); });
+      schedule();
     };
     if (reduced) { textEl.textContent = ex.query; reveal(); return; }
     let n = 0; textEl.textContent = "";
     typing = setInterval(() => { textEl.textContent = ex.query.slice(0, ++n); if (n >= ex.query.length) { clearInterval(typing); setTimeout(reveal, 180); } }, 22);
   }
+
+  // Cycle through the examples every 5 s while the section is on screen and not being pointed at.
+  let auto, visible = false, pointing = false;
+  function schedule() {
+    clearTimeout(auto);
+    if (reduced) return;
+    auto = setTimeout(() => {
+      if (!visible || pointing) return schedule();
+      const i = (X.indexOf(current) + 1) % X.length;
+      show(X[i], chips.querySelectorAll(".chip")[i]);
+    }, 5000);
+  }
+  root.addEventListener("pointerenter", () => { pointing = true; });
+  root.addEventListener("pointerleave", () => { pointing = false; });
+  new IntersectionObserver((entries) => { visible = entries.some((e) => e.isIntersecting); }, { threshold: 0.2 }).observe(root);
 
   chips.innerHTML = X.map((ex, i) => `<button type="button" class="chip" aria-pressed="false" data-i="${i}">${esc(ex.query)}</button>`).join("");
   chips.addEventListener("click", (e) => { const b = e.target.closest(".chip"); if (b) show(X[+b.dataset.i], b); });
