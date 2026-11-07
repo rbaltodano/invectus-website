@@ -656,6 +656,69 @@ function copyButtons() {
   }));
 }
 
+/* ---------- Footer wordmark: "inVectus" drawn in the map's squares ----------
+   Squares flicker in when the footer appears; near the cursor they light up in the accent.
+   The bottom of the letters runs off the page, like the hero circle. */
+function footerMark() {
+  const canvas = document.querySelector(".foot-mark");
+  if (!canvas) return;
+  const g = canvas.getContext("2d"), flicker = new DotFlicker();
+  const ink = "#d1cbc2", accent = "#6edcaa", STEP = 7, SQ = 4;
+  let dots = [], W = 0, H = 0, mouse = null, frame, shown = false;
+  function layout() {
+    W = canvas.getBoundingClientRect().width;
+    if (!W) return;
+    // Size the word to the width, then keep only the top ~78% so it runs off the bottom.
+    const probe = document.createElement("canvas").getContext("2d");
+    const font = (px) => `300 ${px}px "Inter Variable", Inter, sans-serif`;
+    probe.font = font(100);
+    const m = probe.measureText("inVectus"), px = (100 * W * 0.98) / m.width;
+    const ascent = (m.actualBoundingBoxAscent / 100) * px;
+    H = Math.round(ascent * 0.8);
+    const off = document.createElement("canvas"); off.width = Math.ceil(W); off.height = H;
+    const o = off.getContext("2d");
+    o.font = font(px); o.textBaseline = "alphabetic"; o.fillStyle = "#000";
+    o.fillText("inVectus", (W - (m.width / 100) * px) / 2, ascent * 1.02);
+    const data = o.getImageData(0, 0, off.width, H).data;
+    dots = [];
+    for (let y = STEP / 2; y < H; y += STEP) for (let x = STEP / 2; x < W; x += STEP) {
+      if (data[(Math.floor(y) * off.width + Math.floor(x)) * 4 + 3] > 128) dots.push({ x, y, key: `${x},${y}`, glow: 0 });
+    }
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.height = `${H}px`;
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (shown) flicker.sync(dots.map((d) => d.key), performance.now());
+    draw();
+  }
+  function draw() {
+    cancelAnimationFrame(frame);
+    const now = performance.now();
+    g.clearRect(0, 0, W, H);
+    let busy = flicker.pending(now);
+    for (const d of dots) {
+      const near = mouse ? Math.max(0, 1 - Math.hypot(d.x - mouse.x, d.y - mouse.y) / 90) : 0;
+      d.glow += (near - d.glow) * (reduced ? 1 : 0.18);
+      if (Math.abs(near - d.glow) > 0.01) busy = true;
+      const o = shown ? flicker.opacity(d.key, now) : 0;
+      g.globalAlpha = (0.16 + 0.6 * d.glow) * o;
+      g.fillStyle = d.glow > 0.05 ? accent : ink;
+      const s = SQ + d.glow * 2;
+      g.fillRect(d.x - s / 2, d.y - s / 2, s, s);
+    }
+    g.globalAlpha = 1;
+    if (busy) frame = requestAnimationFrame(draw);
+  }
+  canvas.addEventListener("pointermove", (e) => { const r = canvas.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; draw(); });
+  canvas.addEventListener("pointerleave", () => { mouse = null; draw(); });
+  new IntersectionObserver((entries, io) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    io.disconnect(); shown = true; flicker.sync(dots.map((d) => d.key), performance.now()); draw();
+  }, { threshold: 0.2 }).observe(canvas);
+  let t;
+  new ResizeObserver(() => { clearTimeout(t); t = setTimeout(layout, 100); }).observe(canvas);
+  (document.fonts?.ready ?? Promise.resolve()).then(layout);
+}
+
 /* ---------- Reveal on scroll ---------- */
 function reveals() {
   const io = new IntersectionObserver((entries) => entries.forEach((e) => {
@@ -669,5 +732,6 @@ document.querySelectorAll(".shimmer").forEach(shimmer);
 modelPicker();
 searchDemo();
 copyButtons();
+footerMark();
 downloadButton();
 reveals();

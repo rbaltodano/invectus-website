@@ -73,7 +73,7 @@
       </div>
     </section>
 
-    <section class="verdicts reveal" aria-labelledby="verdict-title">
+    <section id="search" class="verdicts reveal" aria-labelledby="verdict-title">
       <div class="wrap">
         <div class="verdict-intro">
           <h2 id="verdict-title">Does this idea already exist here?</h2>
@@ -189,10 +189,23 @@
   </main>
 
   <footer class="foot">
-    <div class="wrap">
-      <span>inVectus · MIT licensed · by <a href="https://github.com/rbaltodano">Ryan Baltodano</a></span>
-      <span class="dim">A potential gap means limited coverage in this collection, not proof that something does not exist.</span>
+    <div class="wrap foot-top">
+      <div class="foot-brand">
+        <img src="assets/invectus-logo.png" alt="inVectus" width="118" height="33">
+        <p>Find gaps in existing data. A local-first research tool, MIT licensed.</p>
+        <p class="foot-status"><span class="dot"></span>v0.1 · macOS preview</p>
+      </div>
+      <nav class="foot-cols" aria-label="Footer">
+        <div><h2>Product</h2><a href="#features">Features</a><a href="#search">Search</a><a href="#agents">Agents</a><a href="#privacy">Privacy</a></div>
+        <div><h2>Project</h2><a href="https://github.com/rbaltodano/inVectus">Source</a><a href="https://github.com/rbaltodano/inVectus#build-from-source">Build steps</a><a href="https://github.com/rbaltodano/inVectus/blob/main/PROGRESS.md">Progress log</a><a href="https://github.com/rbaltodano/inVectus/blob/main/SPEC.md">Specification</a></div>
+        <div><h2>Legal</h2><a href="https://github.com/rbaltodano/inVectus/blob/main/LICENSE">MIT License</a><a href="https://github.com/rbaltodano/inVectus/blob/main/SECURITY.md">Security</a><a href="https://github.com/rbaltodano/inVectus/blob/main/THIRD_PARTY_NOTICES.md">Third-party notices</a></div>
+      </nav>
     </div>
+    <div class="wrap foot-meta">
+      <span>© 2026 <a href="https://github.com/rbaltodano">Ryan Baltodano</a></span>
+      <span>A potential gap means limited coverage in this collection, not proof that something does not exist.</span>
+    </div>
+    <canvas class="foot-mark" aria-hidden="true"></canvas>
   </footer>
 
   <script src="assets/ophthalmology-map.js" defer></script>

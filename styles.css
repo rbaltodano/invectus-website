@@ -240,8 +240,22 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 
 .get .term { margin-top: 0; }
 
-.foot { position: relative; z-index: 2; border-top: 1px solid var(--line); padding: 32px 0 48px; font-size: 13px; }
-.foot .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px 32px; }
+/* Footer: link columns over a giant wordmark drawn in the map's squares (main.js footerMark). */
+.foot { position: relative; z-index: 2; overflow: hidden; background: var(--bg); padding: clamp(64px, 9vw, 112px) 0 0; font-size: 13.5px; }
+.foot-top { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
+.foot-brand img { display: block; height: 26px; width: auto; margin-bottom: 20px; }
+.foot-brand p { color: var(--dim); max-width: 34ch; }
+.foot-status { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
+.foot-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: agent-pulse 1.6s ease-in-out infinite; }
+.foot-cols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
+.foot-cols h2 { margin: 0 0 16px; font-family: var(--mono); font-size: 10.5px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); }
+.foot-cols a { display: block; width: fit-content; padding: 5px 0; color: var(--ink); text-decoration: none; transition: color 150ms ease; }
+.foot-cols a:hover, .foot-cols a:focus-visible { color: var(--accent); }
+.foot-meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 32px; margin-top: clamp(48px, 7vw, 88px); padding-top: 20px; position: relative; font-size: 12px; color: var(--dim); }
+.foot-meta::before { content: ""; position: absolute; top: 0; left: var(--gutter); right: var(--gutter); border-top: 1px solid var(--line); }
+.foot-meta a { color: var(--dim); }
+.foot-mark { display: block; width: 100%; margin-top: 24px; }
+@media (max-width: 760px) { .foot-top { grid-template-columns: 1fr; } .foot-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 
 /* Reveal on scroll: the app's page-in and gap-slide-in, with its stagger. */
 .reveal .wrap { opacity: 0; transform: translateY(8px); }
