@@ -42,7 +42,7 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
 
 /* Nav */
 .nav.light { background: none; }
-.nav { position: absolute; inset: 0 0 auto 0; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 24px var(--gutter); }
+.nav { position: absolute; inset: 0 0 auto 0; max-width: 1920px; margin: 0 auto; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 24px var(--gutter); }
 .brand img { display: block; height: 26px; width: auto; }
 .nav nav { display: flex; gap: 28px; }
 .nav nav a { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--dim); transition: color 150ms ease; }
@@ -68,7 +68,9 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
 .light .btn.primary:hover, .light .btn.primary:focus-visible { background: #000; border-color: #000; }
 
 /* Hero: the circle's centre sits at the hero's bottom-right corner; the section below cuts it. */
-.hero { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; }
+.hero { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; max-width: 1920px; margin: 0 auto;
+  /* Past 1920px the map stops growing; the light background still runs edge to edge. */
+  box-shadow: 0 0 0 100vmax var(--bg); clip-path: inset(0 -100vmax); }
 .hero-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block;
   /* Fade the map under the nav so its links stay legible. */
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); }
