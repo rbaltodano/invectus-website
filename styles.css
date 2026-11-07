@@ -74,7 +74,7 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); }
 .hero-copy { position: relative; z-index: 2; padding: clamp(120px, 22vh, 220px) var(--gutter) 0; max-width: 680px; pointer-events: none; }
 .hero-copy > * { pointer-events: auto; }
-.hero h1 { font-weight: 300; font-size: clamp(44px, 6.4vw, 88px); line-height: 1.02; letter-spacing: -0.03em; max-width: 9ch; margin-bottom: 24px; }
+.hero h1 { font-weight: 300; font-size: clamp(42px, 6vw, 84px); line-height: 1.02; letter-spacing: -0.03em; max-width: 12ch; margin-bottom: 24px; }
 .lede { font-size: clamp(15px, 1.25vw, 17px); font-weight: 300; max-width: 46ch; color: var(--ink); }
 .hero-copy > * { animation: page-in 600ms var(--spring-relaxed) both; }
 .hero-copy > :nth-child(2) { animation-delay: 60ms; }

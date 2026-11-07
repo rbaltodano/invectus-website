@@ -333,7 +333,10 @@ function heroMap() {
   function placeCard() {
     const anchor = pinned.gap ? toScreen(pinned.gap.x, pinned.gap.y) : toScreen(pinned.point.x, pinned.point.y);
     const w = tip.offsetWidth, h = tip.offsetHeight;
-    let x = anchor[0] + 16, y = anchor[1] + 16;
+    // On narrow screens the card sits at the bottom of the hero, clear of the copy.
+    if (W < 760) { tip.style.left = "16px"; tip.style.top = `${Math.max(12, H - h - 72)}px`; return; }
+    // A gap's card starts past its code label so the ring stays readable.
+    let x = anchor[0] + (pinned.gap ? 56 : 16), y = anchor[1] + 16;
     if (x + w > W - 12) x = anchor[0] - 16 - w;
     if (y + h > H - 12) y = anchor[1] - 16 - h;
     tip.style.left = `${Math.max(12, x)}px`; tip.style.top = `${Math.max(12, y)}px`;
@@ -362,7 +365,8 @@ function heroMap() {
     const onScreen = (gp) => { const [x, y] = toScreen(gp.x, gp.y); return inside(x, y, R * 0.15) && x > W * 0.45 && x < W - 40 && y > 100 && y < H - 100; };
     const picks = gaps.filter(onScreen).length ? gaps.filter(onScreen) : gaps;
     const gp = picks[Math.floor(Math.random() * picks.length)];
-    focusArea(gp.area, () => { if (!introOver) { introOver = true; pin({ gap: gp }); } });
+    // On narrow screens the card would cover the copy, so the tour only zooms.
+    focusArea(gp.area, () => { if (!introOver) { introOver = true; if (W >= 760) pin({ gap: gp }); } });
   }
   const endIntro = () => { introOver = true; clearTimeout(introTimer); };
   for (const type of ["pointerdown", "wheel", "keydown", "gesturestart"]) canvas.addEventListener(type, endIntro, { capture: true });
