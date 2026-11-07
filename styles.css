@@ -296,6 +296,8 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .verdicts .wrap { max-width: 1920px; }
 .verdicts .search-demo { grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); }
 .verdicts .search-map-wrap { max-width: 860px; justify-self: end; width: 100%; }
-.verdicts .verdict-intro { max-width: 720px; margin: 0 auto clamp(48px, 6vw, 88px); text-align: center; }
+.verdicts .verdict-intro { max-width: 1040px; margin: 0 auto clamp(48px, 6vw, 88px); text-align: center; }
 .verdicts .verdict-intro p { margin-left: auto; margin-right: auto; }
 .verdicts .search-demo { margin-top: 0; }
+.verdicts .verdict-intro h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; letter-spacing: -0.03em; margin-bottom: 24px; }
+.verdicts .verdict-intro h2, .get-center h2, .hero h1 { text-wrap: balance; }
