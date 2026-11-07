@@ -305,3 +305,4 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .search-result { transition: opacity 300ms ease; }
 .search-result.fading { opacity: 0; transition-duration: 200ms; }
 .verdict:empty { display: none; }
+.verdicts .verdict-intro h2 { max-width: 760px; margin-left: auto; margin-right: auto; }
