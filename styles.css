@@ -74,7 +74,7 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); }
 .hero-copy { position: relative; z-index: 2; padding: clamp(120px, 22vh, 220px) var(--gutter) 0; max-width: 680px; pointer-events: none; }
 .hero-copy > * { pointer-events: auto; }
-.hero h1 { font-weight: 300; font-size: clamp(38px, 5.6vw, 72px); line-height: 1.04; letter-spacing: -0.025em; max-width: 13ch; margin-bottom: 24px; }
+.hero h1 { font-weight: 300; font-size: clamp(44px, 6.4vw, 88px); line-height: 1.02; letter-spacing: -0.03em; max-width: 9ch; margin-bottom: 24px; }
 .lede { font-size: clamp(15px, 1.25vw, 17px); font-weight: 300; max-width: 46ch; color: var(--ink); }
 .hero-copy > * { animation: page-in 600ms var(--spring-relaxed) both; }
 .hero-copy > :nth-child(2) { animation-delay: 60ms; }
@@ -116,7 +116,8 @@ main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg
 @media (max-width: 760px) { .ranks { grid-template-columns: 1fr; } }
 
 .shot figure { margin: 0; }
-.shot img { display: block; width: 100%; height: auto; border: 1px solid var(--line); border-radius: 6px; }
+/* Window captures carry a transparent shadow margin; widen them so the window itself lines up. */
+.shot img.mac-shot { display: block; width: 108%; max-width: none; height: auto; margin: 0 -4%; }
 .shot figcaption { margin-top: 16px; font-size: 13px; color: var(--dim); max-width: 70ch; }
 
 /* Search example */
@@ -223,3 +224,18 @@ main > section:not(.hero) { position: relative; z-index: 2; background: var(--bg
   .reveal .wrap, .reveal .ranks li, .reveal .figures > div, .reveal .hits li { opacity: 1; transform: none; }
   .reveal .meter > span { transform: none; }
 }
+
+/* lightbox.js (from the Angrove site): a clicked photo grows to fill the screen over a darkened page. */
+.lightbox-target {
+  cursor: zoom-in;
+  transform: perspective(1200px) rotateX(var(--tilt-x, 0deg)) rotateY(var(--tilt-y, 0deg));
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), scale 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lightbox-target.is-hovered { scale: 1.03; }
+.lightbox-target:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.lightbox { position: fixed; inset: 0; z-index: 2147483002; cursor: zoom-out; outline: none; }
+.lightbox__shade { position: absolute; inset: 0; background: rgba(20, 20, 20, 0.86); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.lightbox__media { transform: none; scale: none; transition: none; cursor: zoom-out; }
+.lightbox__caption { position: fixed; translate: -50% 0; text-align: center; pointer-events: none; }
+.lightbox__title { margin: 0 0 6px; font: 300 22px/1.3 var(--sans); letter-spacing: -0.01em; color: #d1cbc2; }
+.lightbox__text { margin: 0; font: 400 14px/1.55 var(--sans); color: rgba(209, 203, 194, 0.68); }
