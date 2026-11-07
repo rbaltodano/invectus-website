@@ -301,8 +301,8 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .verdicts .search-demo { margin-top: 0; }
 .verdicts .verdict-intro h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; letter-spacing: -0.03em; margin-bottom: 24px; }
 .verdicts .verdict-intro h2, .get-center h2, .hero h1 { text-wrap: balance; }
-.verdicts .verdict-intro p { max-width: none; }
+.verdicts .verdict-intro p { max-width: 550px; }
 .search-result { transition: opacity 300ms ease; }
 .search-result.fading { opacity: 0; transition-duration: 200ms; }
 .verdict:empty { display: none; }
-.verdicts .verdict-intro h2 { max-width: 450px; margin-left: auto; margin-right: auto; }
+.verdicts .verdict-intro h2 { max-width: 550px; margin-left: auto; margin-right: auto; }
