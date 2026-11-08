@@ -968,27 +968,45 @@ function getStars() {
     stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
     return best;
   }
-  // Click a star to pin it (× and region outline); click it again to clear.
+  // Selection: a star is shown (× , circle and card) only when selected, never on hover.
+  // Every 5 s a random star on screen is selected; a star the visitor clicks stays selected for
+  // 15 s or until it is clicked again, then the random tour resumes.
+  let userUntil = 0, nextAuto = 0;
+  function select(star) {
+    const now = performance.now(), was = pinned;
+    pinned = star;
+    if (was && was !== star) { pins = pins.filter((pn) => pn.star !== was); pins.push({ star: was, t0: now, out: true }); }
+    if (star && star !== was) pins.push({ star, t0: now, out: false });
+    draw();
+    if (star) showTip(star); else tip.hidden = true;
+  }
+  function onScreen(st) {
+    if (st.hidden) return false;
+    const r = canvas.getBoundingClientRect(), [x, y] = at(st), vy = y + r.top, ft = foot?.getBoundingClientRect().top ?? innerHeight;
+    return x > 40 && x < W - 300 && vy > 80 && vy < Math.min(innerHeight, ft) - 140;
+  }
+  function randomStar() {
+    const pool = stars.filter((st) => st !== pinned && onScreen(st));
+    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
+  }
   section.addEventListener("click", (e) => {
     const i = starAt(e);
     if (i < 0) return;
-    const now = performance.now(), was = pinned;
-    pinned = pinned === stars[i] ? null : stars[i];
-    if (was) { pins = pins.filter((pn) => pn.star !== was); pins.push({ star: was, t0: now, out: true }); }
-    if (pinned) pins.push({ star: pinned, t0: now, out: false });
-    draw(); showTip(pinned ?? stars[i]);
-    if (!pinned) tip.hidden = true;
+    const now = performance.now();
+    if (stars[i] === pinned) { select(null); userUntil = 0; nextAuto = now + 5000; return; }
+    select(stars[i]); userUntil = now + 15000;
   });
-  function pick(e) {
-    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-    let best = -1, bd = 12 * 12;
-    stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
-    if (best !== hot) { hot = best; draw(); }
-    showTip(best >= 0 ? stars[best] : pinned);
-  }
-  section.addEventListener("pointermove", pick);
-  section.addEventListener("pointerdown", pick);
-  section.addEventListener("pointerleave", () => { hot = -1; draw(); showTip(pinned); });
+  setInterval(() => {
+    const now = performance.now();
+    if (!shown || !visible || document.hidden || flicker.pending(now)) return;
+    if (userUntil) { if (now < userUntil) return; userUntil = 0; nextAuto = 0; }
+    if (now < nextAuto) return;
+    const st = randomStar();
+    if (st) select(st);
+    nextAuto = now + 5000;
+  }, 250);
+  // Hover only changes the cursor over a star.
+  section.addEventListener("pointermove", (e) => { section.style.cursor = starAt(e) >= 0 ? "pointer" : ""; });
 
   // Parallax (desktop): each star depth and the Earth drift at their own speed.
   let ticking = false;
