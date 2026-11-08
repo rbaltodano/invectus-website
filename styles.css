@@ -71,7 +71,7 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
 .hero { position: relative; height: 100vh; height: 100svh; min-height: 560px; overflow: hidden; max-width: 1920px; margin: 0 auto;
   /* Past 1920px the map stops growing; the light background still runs edge to edge. */
   box-shadow: 0 0 0 100vmax var(--bg); clip-path: inset(0 -100vmax); }
-.hero-map { position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+.hero-map { touch-action: none; position: absolute; inset: 0; width: 100%; height: 100%; display: block;
   /* Fade the map under the nav so its links stay legible. */
   -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); mask-image: linear-gradient(to bottom, rgba(0,0,0,.12) 0, rgba(0,0,0,.12) 64px, #000 120px); }
 .hero-copy { position: relative; z-index: 2; padding: clamp(120px, 22vh, 220px) var(--gutter) 0; max-width: 680px; pointer-events: none; }

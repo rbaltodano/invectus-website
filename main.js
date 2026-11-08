@@ -152,6 +152,8 @@ function heroMap() {
     if (!laidOut) { view = { s: START_ZOOM, x: 0, y: 0 }; laidOut = true; }
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    // Clip the hit area as well as the drawing: only circle-origin gestures belong to the map.
+    canvas.style.clipPath = `circle(${R}px at ${C.x}px ${C.y}px)`;
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     rebuild();
     if (pinned) placeCard();
@@ -381,38 +383,75 @@ function heroMap() {
   for (const type of ["pointerdown", "wheel", "keydown", "gesturestart"]) canvas.addEventListener(type, endIntro, { capture: true });
   hero.querySelectorAll(".map-controls button").forEach((b) => b.addEventListener("click", endIntro, { capture: true }));
 
+  const touches = new Map();
+  let touchPinch;
+  const touchPair = () => {
+    const [a, b] = [...touches.values()];
+    return { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, distance: Math.max(1, Math.hypot(b.x - a.x, b.y - a.y)) };
+  };
   canvas.addEventListener("pointerdown", (e) => {
     const [x, y] = at(e);
     if (phase !== "done" || !inside(x, y)) return;
     stopZoom();
-    // Touch keeps page scrolling; mouse and pen drag to pan, as in the app.
-    drag = { x, y, v: view, moved: false, touch: e.pointerType === "touch" };
-    if (!drag.touch) canvas.setPointerCapture(e.pointerId);
+    const touch = e.pointerType === "touch";
+    canvas.setPointerCapture(e.pointerId);
+    if (touch) {
+      touches.set(e.pointerId, { x, y });
+      if (touches.size >= 2) {
+        touchPinch = { ...touchPair(), v: view };
+        drag = undefined;
+        return;
+      }
+    }
+    drag = { x, y, v: view, moved: false, touch, id: e.pointerId };
   });
   canvas.addEventListener("pointermove", (e) => {
     const [x, y] = at(e);
-    if (drag && !drag.touch) {
-      if (Math.abs(x - drag.x) + Math.abs(y - drag.y) > 3) drag.moved = true;
+    if (touches.has(e.pointerId)) touches.set(e.pointerId, { x, y });
+    if (touchPinch) {
+      const pair = touchPair(), start = touchPinch;
+      const next = zoomTo(start.v, start.v.s * Math.pow(pair.distance / start.distance, PINCH_DAMPING), start.x, start.y);
+      setView(clampPan({ ...next, x: next.x + pair.x - start.x, y: next.y + pair.y - start.y }));
+      return;
+    }
+    if (drag && drag.id === e.pointerId) {
+      if (Math.abs(x - drag.x) + Math.abs(y - drag.y) > (drag.touch ? 8 : 3)) drag.moved = true;
       if (drag.moved) { tip.hidden = !pinned; canvas.style.cursor = "grabbing"; setView(clampPan({ ...drag.v, x: drag.v.x + x - drag.x, y: drag.v.y + y - drag.y })); }
       return;
     }
+    if (e.pointerType === "touch") return;
     const h = find(x, y);
     if (h?.cell === hover?.cell && h?.gap === hover?.gap) { if (h && !pinned) { tip.style.left = `${Math.min(x + 14, W - 250)}px`; tip.style.top = `${Math.min(y + 14, H - 80)}px`; } return; }
     showHover(h, x, y);
   });
-  canvas.addEventListener("pointerup", (e) => {
+  function releasePointer(e, cancelled = false) {
+    touches.delete(e.pointerId);
+    if (canvas.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
+    if (touchPinch) {
+      touchPinch = touches.size >= 2 ? { ...touchPair(), v: view } : undefined;
+      const remaining = touches.entries().next().value;
+      // After a pinch, one finger can keep panning; lifting it must never count as a tap.
+      drag = !touchPinch && remaining ? { ...remaining[1], id: remaining[0], v: view, moved: true, touch: true } : undefined;
+      return;
+    }
+    if (!drag || drag.id !== e.pointerId) return;
     const d = drag; drag = undefined;
-    if (!d) return;
+    canvas.style.cursor = "";
+    if (cancelled) return;
     const [x, y] = at(e);
-    if (d.moved || (d.touch && Math.abs(x - d.x) + Math.abs(y - d.y) > 8)) { showHover(find(x, y), x, y); return; }
+    if (d.moved || (d.touch && Math.abs(x - d.x) + Math.abs(y - d.y) > 8)) {
+      if (!d.touch) showHover(find(x, y), x, y);
+      return;
+    }
     const f = find(x, y);
     if (f?.gap) { pin({ gap: f.gap }); focusArea(f.gap.area); }
     else if (f?.cell?.n === 1) pin({ point: f.cell.first });
     else if (f?.cell) { pin(undefined); zoomAt(2.5, f.cell.x, f.cell.y); }
     else pin(undefined);
-  });
-  canvas.addEventListener("pointercancel", () => { drag = undefined; });
-  canvas.addEventListener("pointerleave", () => { if (!drag) showHover(undefined, -1, -1); });
+  }
+  canvas.addEventListener("pointerup", (e) => releasePointer(e));
+  canvas.addEventListener("pointercancel", (e) => releasePointer(e, true));
+  canvas.addEventListener("pointerleave", () => { if (!drag && !touchPinch) showHover(undefined, -1, -1); });
 
   // Plain scrolling keeps scrolling the page; pinch or ⌘/Ctrl-scroll zooms at the pointer.
   canvas.addEventListener("wheel", (e) => {
@@ -423,9 +462,17 @@ function heroMap() {
     const dy = Math.max(-60, Math.min(60, (e.deltaY || e.deltaX) * unit));
     setView(zoomTo(view, view.s * Math.exp(-dy * ZOOM_PER_DELTA), x, y));
   }, { passive: false });
-  canvas.addEventListener("gesturestart", (e) => { e.preventDefault(); stopZoom(); pinch = { s: view.s, v: view }; });
+  canvas.addEventListener("gesturestart", (e) => {
+    const [x, y] = at(e);
+    if (!inside(x, y)) return;
+    e.preventDefault();
+    if (touches.size) return;
+    stopZoom(); pinch = { s: view.s, v: view };
+  });
   canvas.addEventListener("gesturechange", (e) => {
-    e.preventDefault(); if (!pinch) return;
+    if (touches.size) { e.preventDefault(); return; }
+    if (!pinch) return;
+    e.preventDefault();
     const [x, y] = at(e); setView(zoomTo(pinch.v, pinch.s * Math.pow(e.scale, PINCH_DAMPING), x, y));
   });
   canvas.addEventListener("gestureend", (e) => { e.preventDefault(); pinch = undefined; });
