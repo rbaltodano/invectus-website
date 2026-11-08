@@ -500,8 +500,8 @@ function heroMap() {
 }
 
 /* ---------- Agent chat: abstract bubbles, real inVectus results, illustrative wording ----------
-   Two exchanges: ChatGPT answers a gap question (list_gaps), Claude answers an "is this new?"
-   question (check_idea). The numbers, verdict and papers are real results from the Ophthalmology
+   Three exchanges: ChatGPT answers a gap question (list_gaps); Claude (near) and Grok (open)
+   answer "is this new?" questions (check_idea). The numbers, verdict and papers are real results from the Ophthalmology
    Research collection; the sentences around them are written for the demo. */
 function agentChat() {
   const root = document.querySelector(".chat");
@@ -517,10 +517,15 @@ function agentChat() {
     { bot: "claude", name: "Claude", mark: "#mark-claude", tool: "check_idea",
       think: ["Checking whether this idea is already in the collection", "Calling inVectus · check_idea", "Reading the nearest papers"],
       text: "<b>Near, not the same.</b> Related work is here, but nothing on that exact question. It sits between the HLA-B27 uveitis papers and the experimental autoimmune uveitis work.",
-      cite: "Nearest: <b>Immunosuppression in the management of presumed non-infective uveitis</b> (2020, 0.83) · <b>HLA-B27 positive acute anterior uveitis: a manifestation of subclinical gut inflammation</b> (1990, 0.78)" },
+      cite: "Nearest: <b>Immunosuppression in the Management of Presumed Non-infective Uveitis</b> (2020, 0.83) · <b>HLA-B27 positive idiopathic acute anterior uveitis: a unique manifestation of subclinical gut inflammation</b> (1990, 0.78)" },
+    { user: "Is VR training for strabismus surgery residents already covered?" },
+    { bot: "grok", name: "Grok", mark: "#mark-grok", tool: "check_idea",
+      think: ["Checking the idea against your collection", "Calling inVectus · check_idea", "Reading the closest matches"],
+      text: "<b>Open in this collection.</b> Nothing here looks like the same thing. The closest work tests ocular misalignment in VR and trains surgeons in virtual laparoscopy, not strabismus surgery itself. Check outside sources before relying on it.",
+      cite: "Nearest: <b>Stepping into the virtual unknown: feasibility study of a virtual reality-based test of ocular misalignment</b> (2017, 0.80) · <b>Eye trackers in a virtual laparoscopic training environment</b> (2003, 0.79)" },
   ];
   // One exchange at a time: question, typing, answer; hold; both fade out; the next exchange.
-  const EXCHANGES = [[STEPS[0], STEPS[1]], [STEPS[2], STEPS[3]]];
+  const EXCHANGES = [[STEPS[0], STEPS[1]], [STEPS[2], STEPS[3]], [STEPS[4], STEPS[5]]];
   let timers = [], index = 0, visible = false, running = false;
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
