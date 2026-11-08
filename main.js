@@ -499,63 +499,45 @@ function heroMap() {
   introTimer = setTimeout(intro, reduced ? 300 : DOT_DELAY_MS + DOT_FLICKER_MS + 900);
 }
 
-/* ---------- Agent session: real inVectus MCP tools, real results, illustrative wording ----------
-   The tool names are the MCP server's; the gaps, counts and papers come from the Ophthalmology
-   Research collection (gap scan and region map). The agent's sentences are written for the demo. */
-function agentSession() {
-  const root = document.querySelector(".session"), D = window.INVECTUS_MAP;
-  if (!root || !D) return;
-  const log = root.querySelector(".session-log"), wire = document.querySelector(".wire");
-  const model = root.querySelector(".session-model"), providers = [...root.querySelectorAll("[data-provider]")];
-  const AGENTS = {
-    claude: { app: "Claude Code", model: "Claude Opus 5.5", mark: "#mark-claude",
-      answer: "The strongest candidate is <b>G-01, neurons · cortex · colliculus</b>: 105 demand papers, no review reaching it, and activity up 32% a year. Its core includes recent superior colliculus and macaque V3A work. Worth a scoping search before you commit; this only covers your collection." },
-    chatgpt: { app: "Codex", model: "GPT-6.1 Sol", mark: "#mark-openai",
-      answer: "Top gap: <b>G-01 (neurons · cortex · colliculus)</b>. 105 demand papers, 0 coverage, +32%/yr. Core papers span 1985–2024, including superior colliculus and V3A studies. Suggest a scoping search next; the result holds for this collection only." },
-  };
-  const gaps = D.gaps.slice(0, 3).map((gp, i) => ({ code: `G-0${i + 1}`, ...gp }));
-  const PAPERS = [ // three of G-01's core papers, from the gap scan
-    ["Rapid Input-Output Transformation between Local Field Potential and Spiking Activity during Sensation but not Action in the Superior Colliculus.", 2023],
-    ["Differential clustering of visual and choice- and saccade-related activity in macaque V3A and CIP.", 2024],
-    ["Pulvinar nuclei of the behaving rhesus monkey: visual responses and their modulation.", 1985],
+/* ---------- Agent chat: abstract bubbles, real inVectus results, illustrative wording ----------
+   Two exchanges: ChatGPT answers a gap question (list_gaps), Claude answers an "is this new?"
+   question (check_idea). The numbers, verdict and papers are real results from the Ophthalmology
+   Research collection; the sentences around them are written for the demo. */
+function agentChat() {
+  const root = document.querySelector(".chat");
+  if (!root) return;
+  const log = root.querySelector(".chat-log"), wire = document.querySelector(".wire");
+  const STEPS = [
+    { user: "Which topics have plenty of studies but no reviews yet?" },
+    { bot: "chatgpt", name: "ChatGPT", mark: "#mark-openai", tool: "list_gaps",
+      text: "The strongest one is <b>neurons · cortex · colliculus</b>: 105 studies and no review reaching that region, with activity up 32% a year. Next are retinal gene and cell work (108 studies) and luminance and colour vision (82).",
+      cite: "In your collection only · <b>G-01</b>, G-02, G-03" },
+    { user: "Has anyone looked at the gut microbiome and uveitis flares?" },
+    { bot: "claude", name: "Claude", mark: "#mark-claude", tool: "check_idea",
+      text: "<b>Near, not the same.</b> Related work is here, but nothing on that exact question. It sits between the HLA-B27 uveitis papers and the experimental autoimmune uveitis work.",
+      cite: "Nearest: <b>Immunosuppression in the management of presumed non-infective uveitis</b> (2020, 0.83) · <b>HLA-B27 positive acute anterior uveitis: a manifestation of subclinical gut inflammation</b> (1990, 0.78)" },
   ];
-  let agent = "claude", timers = [];
+  let timers = [];
   const later = (ms, fn) => timers.push(setTimeout(fn, reduced ? 0 : ms));
   const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
   const pulse = (dir) => { if (!wire || reduced) return; wire.classList.remove("out", "back"); void wire.offsetWidth; wire.classList.add(dir); };
-  function tool(at, name, args, out) {
-    later(at, () => {
-      const li = add("s-tool running", `<div class="s-call"><span>inVectus ·</span> <b>${name}</b> <span class="s-args">${args}</span></div>`);
-      pulse("out");
-      later(650, () => { li.classList.remove("running"); li.insertAdjacentHTML("beforeend", `<div class="s-out">${out}</div>`); pulse("back"); });
-    });
-  }
   function play() {
     timers.forEach(clearTimeout); timers = []; log.innerHTML = "";
-    const a = AGENTS[agent];
-    model.textContent = a.model;
-    later(0, () => add("s-user", "Which topics have demand but no reviews yet?"));
-    tool(700, "list_gaps", "kind: coverage · top 3", gaps.map((gp) =>
-      `<div class="row"><span>${gp.code}</span><span>${esc(gp.label)}</span><span>${gp.demand} demand · ${gp.coverage} coverage</span></div>`).join(""));
-    tool(2100, "gap_detail", "G-01", `<div>${esc(gaps[0].explanation)}</div>` +
-      PAPERS.map(([t, y]) => `<div class="paper">${esc(t)}<em>${y}</em></div>`).join(""));
-    later(3500, () => add("s-agent", `<span class="who"><svg width="15" height="15" aria-hidden="true"><use href="${a.mark}"/></svg>${a.model}</span><p>${a.answer}</p>`));
-    tool(4700, "suggest_decision", "G-01 → confirmed gap", "<div>Sent to inVectus for your review.</div>");
-    later(5600, () => {
-      const li = add("s-decision", `<span class="what"><b>Suggested by ${a.model}:</b> mark G-01 as a confirmed gap</span><span class="state">Waiting for you</span><button type="button" class="btn small primary">Accept</button><button type="button" class="btn small">Dismiss</button>`);
-      li.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
-        li.classList.add("done");
-        li.querySelector(".state").textContent = b.textContent === "Accept" ? "Accepted by you" : "Dismissed by you";
-      }));
-    });
+    let t = 0;
+    for (const step of STEPS) {
+      if (step.user) { later(t, () => add("c-user", esc(step.user))); t += 900; continue; }
+      let typing;
+      later(t, () => { typing = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><span class="c-bubble c-typing" aria-label="${step.name} is answering"><i></i><i></i><i></i></span>`); pulse("out"); });
+      later(t + 1300, () => {
+        typing?.remove();
+        const li = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><div class="c-bubble"><span class="c-name">${step.name}</span><p>${step.text}</p><span class="c-cite">${step.cite}</span></div>`);
+        li.insertAdjacentHTML("afterend", `<li class="c-chip">via inVectus · <b>${step.tool}</b></li>`);
+        pulse("back");
+      });
+      t += 2600;
+    }
   }
-  providers.forEach((b) => b.addEventListener("click", () => {
-    agent = b.dataset.provider;
-    providers.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
-    play();
-  }));
-  root.querySelector(".session-replay").addEventListener("click", play);
-  model.textContent = AGENTS[agent].model;
+  root.querySelector(".chat-replay").addEventListener("click", play);
   const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); play(); } }, { threshold: 0.3 });
   io.observe(root);
 }
@@ -802,7 +784,7 @@ function reveals() {
 }
 
 heroMap();
-agentSession();
+agentChat();
 searchDemo();
 copyButtons();
 footerMark();
