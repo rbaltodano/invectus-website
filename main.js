@@ -97,6 +97,7 @@ const HERO_CELL = 6, START_ZOOM = 1.9;
 const heroSide = (n) => (n === 1 ? SINGLE : Math.min(HERO_CELL - 1, SINGLE + 0.6 * Math.log2(n)));
 
 function heroMap() {
+  const BLIP_MS = 2600, BLIP_R = 46;
   const D = window.INVECTUS_MAP;
   const hero = document.querySelector(".hero");
   if (!D || !hero) return;
@@ -171,10 +172,23 @@ function heroMap() {
       if (c) { c.x += x; c.y += y; c.n++; c.regions.set(p.fine, (c.regions.get(p.fine) ?? 0) + 1); }
       else grid.set(k, { x, y, n: 1, first: p, regions: new Map([[p.fine, 1]]) });
     }
-    cells = [...grid.values()].map((c) => ({ ...c, x: c.x / c.n, y: c.y / c.n, key: `item:${c.first.i}` }));
+    cells = [...grid.values()].map((c) => ({ ...c, x: c.x / c.n, y: c.y / c.n, key: `item:${c.first.i}`, d: depthOf(c.first.i, c.n) }));
     syncFlicker();
     draw();
   }
+
+  // Depth, like the stars at the bottom of the page: each square gets a stable depth from its
+  // paper; far squares are smaller and fainter and drift more as the page scrolls. Dense
+  // cells always stay near so the clusters keep their shape.
+  const HERO_DEPTHS = [{ a: 1, ds: 0, drift: 0.06 }, { a: 0.62, ds: -1, drift: 0.14 }, { a: 0.36, ds: -1.5, drift: 0.24 }];
+  function depthOf(i, n) {
+    if (n > 3) return HERO_DEPTHS[0];
+    const h = Math.abs(Math.sin(i * 12.9898) * 43758.5453) % 1;
+    return HERO_DEPTHS[h < 0.4 ? 0 : h < 0.72 ? 1 : 2];
+  }
+  let scrollShift = 0, blips = [];
+  const parallaxOn = !reduced && matchMedia("(pointer: fine) and (min-width: 1025px)").matches;
+  const cellPos = (c) => [c.x, c.y - scrollShift * c.d.drift];
 
   function visibleGaps() {
     return gaps.filter((gp) => { const [x, y] = toScreen(gp.x, gp.y); return x > 0 && y > 0 && inside(x, y, 7); });
@@ -228,10 +242,23 @@ function heroMap() {
       g.setLineDash([]);
 
       g.fillStyle = INK;
+      blips = blips.filter((b) => now < b.t0 + BLIP_MS);
+      const live = blips.map((b) => { const [bx, by] = toScreen(b.gap.x, b.gap.y); const t = (now - b.t0) / BLIP_MS; return { bx, by, t, r: (1 - (1 - t) ** 3) * BLIP_R }; }).filter((b) => b.t >= 0);
       for (const c of cells) {
-        const s = heroSide(c.n);
-        g.globalAlpha = (c.n === 1 ? 0.62 : 0.88) * flicker.opacity(c.key, now);
-        g.fillRect(c.x - s / 2, c.y - s / 2, s, s);
+        const [cx, cy] = cellPos(c);
+        let boost = 0;
+        for (const b of live) {
+          const dist = Math.hypot(cx - b.bx, cy - b.by);
+          if (dist < BLIP_R + 14) boost = Math.max(boost, Math.max(0, 1 - Math.abs(dist - b.r) / 14) * (1 - b.t));
+        }
+        const s = Math.max(2, heroSide(c.n) + c.d.ds) + (boost > 0.3 ? 1 : 0);
+        g.globalAlpha = Math.min(1, (c.n === 1 ? 0.62 : 0.88) * c.d.a + 0.5 * boost) * flicker.opacity(c.key, now);
+        g.fillRect(Math.round(cx - s / 2), Math.round(cy - s / 2), s, s);
+      }
+      // Blip rings: a thin mint ring spreading out from the gap and fading.
+      for (const b of live) {
+        g.globalAlpha = 0.55 * (1 - b.t); g.strokeStyle = ACCENT; g.lineWidth = 1;
+        g.beginPath(); g.arc(b.bx, b.by, Math.max(5, b.r), 0, Math.PI * 2); g.stroke();
       }
 
       // Region names once a region is large enough on screen.
@@ -272,6 +299,19 @@ function heroMap() {
     g.globalAlpha = 1;
     g.restore();
 
+    // Atmosphere: a soft cool glow just outside the rim, like the Earth's at the bottom of the page.
+    const glow = g.createRadialGradient(C.x, C.y, R - 2, C.x, C.y, R + 70);
+    glow.addColorStop(0, "rgba(64, 140, 220, 0.34)");
+    glow.addColorStop(0.18, "rgba(64, 140, 220, 0.14)");
+    glow.addColorStop(1, "rgba(64, 140, 220, 0)");
+    g.fillStyle = glow;
+    g.beginPath(); g.arc(C.x, C.y, R + 70, 0, Math.PI * 2); g.arc(C.x, C.y, R - 1, 0, Math.PI * 2, true); g.fill("evenodd");
+    const inner = g.createRadialGradient(C.x, C.y, R - 40, C.x, C.y, R);
+    inner.addColorStop(0, "rgba(64, 140, 220, 0)");
+    inner.addColorStop(1, "rgba(64, 140, 220, 0.10)");
+    g.fillStyle = inner;
+    g.beginPath(); g.arc(C.x, C.y, R - 1, 0, Math.PI * 2); g.fill();
+
     g.strokeStyle = INK; g.lineWidth = 1;
     g.beginPath(); g.arc(C.x, C.y, R - 1, 0, Math.PI * 2); g.stroke();
     if (phase === "index") {
@@ -284,7 +324,7 @@ function heroMap() {
     else if (phase === "glide") statusText.textContent = "Mapping…";
     else { statusText.textContent = `Mapped · ${fmt(points.length)} papers · ${D.regions.length} regions · ${D.gap_count} gaps`; status.classList.add("done"); }
 
-    if (phase !== "done" || flicker.pending(now)) frame = requestAnimationFrame(draw);
+    if (phase !== "done" || flicker.pending(now) || blips.length) frame = requestAnimationFrame(draw);
   }
 
   /* Camera, as in the app: geometric zoom anchored at the pointer, smoothstep easing. */
@@ -321,7 +361,7 @@ function heroMap() {
     if (phase !== "done" || !inside(x, y)) return undefined;
     for (const gp of visibleGaps()) { const [gx, gy] = toScreen(gp.x, gp.y); if ((gx - x) ** 2 + (gy - y) ** 2 < 64) return { gap: gp }; }
     let best, bd = 100;
-    for (const c of cells) { const d = (c.x - x) ** 2 + (c.y - y) ** 2; if (d < bd) { bd = d; best = c; } }
+    for (const c of cells) { const [cx, cy] = cellPos(c); const d = (cx - x) ** 2 + (cy - y) ** 2; if (d < bd) { bd = d; best = c; } }
     return best ? { cell: best } : undefined;
   }
   function tipHTML(h) {
@@ -497,6 +537,27 @@ function heroMap() {
   document.fonts?.ready.then(draw);
   layout();
   introTimer = setTimeout(intro, reduced ? 300 : DOT_DELAY_MS + DOT_FLICKER_MS + 900);
+
+  // Gaps blip like radar: every couple of seconds one or two visible gaps send out a ring.
+  let heroVisible = true;
+  new IntersectionObserver((entries) => { heroVisible = entries.some((e) => e.isIntersecting); }, { threshold: 0 }).observe(hero);
+  if (!reduced) setInterval(() => {
+    if (!heroVisible || phase !== "done" || document.hidden) return;
+    const vis = visibleGaps();
+    if (!vis.length) return;
+    const n = Math.random() < 0.35 ? 2 : 1, now = performance.now();
+    for (let i = 0; i < n; i++) blips.push({ gap: vis[Math.floor(Math.random() * vis.length)], t0: now + i * 600 });
+    draw();
+  }, 2400);
+  // Parallax (desktop): far squares drift more than near ones as the hero scrolls away.
+  if (parallaxOn) {
+    let ticking = false;
+    addEventListener("scroll", () => {
+      if (ticking || !heroVisible) return;
+      ticking = true;
+      requestAnimationFrame(() => { ticking = false; scrollShift = -scrollY; draw(); });
+    }, { passive: true });
+  }
 }
 
 /* ---------- Agent chat: abstract bubbles, real inVectus results, illustrative wording ----------
