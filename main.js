@@ -785,6 +785,8 @@ function getStars() {
   for (const [x, y] of D.points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
   const fit = { x0, y0, x1, y1 };
   const regionById = new Map(D.regions.map((r) => [r.id, r]));
+  const byRegion = new Map();
+  for (const pt of D.points) (byRegion.get(pt[2]) ?? byRegion.set(pt[2], []).get(pt[2])).push(pt);
   let sky = { ax: 0, ay: 0, sx: 1, sy: 1 }, pinned = null;
   const SPREAD = 2.6;
   // The Earth's horizon in the photo (top of the atmosphere glow), as a share of image height at
@@ -846,7 +848,14 @@ function getStars() {
         if (x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16) continue;
         if (stars.some((o) => (o.x - x) ** 2 + (o.y - y) ** 2 < MIN_GAP * MIN_GAP)) continue;
         const depth = DEPTHS[rand() < 0.2 ? 0 : rand() < 0.45 ? 1 : 2];
-        stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p: D.points[Math.floor(rand() * D.points.length)], key: `f:${cx}:${cy}:${k}`, filler: true });
+        // Use a paper from the nearest region, so this star belongs to a cluster and gets its circle.
+        let near = null, nd = Infinity;
+        for (const reg of D.regions) {
+          const rx = sky.ax + (reg.x - fit.x0) * sky.sx, ry = sky.ay + (reg.y - fit.y0) * sky.sy, d2 = (rx - x) ** 2 + (ry - y) ** 2;
+          if (d2 < nd && byRegion.get(reg.id)?.length) { nd = d2; near = reg; }
+        }
+        const pool = near ? byRegion.get(near.id) : D.points;
+        stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p: pool[Math.floor(rand() * pool.length)], key: `f:${cx}:${cy}:${k}` });
       }
     }
     stars.sort((a, b) => a.d.size - b.d.size); // far first, near on top
@@ -891,19 +900,15 @@ function getStars() {
   }
   function drawPin(star, alpha) {
     const [px, py] = at(star);
-    if (!star.filler) {
-      const reg = regionById.get(star.p[2]);
-      if (reg) {
-        // A true circle: centred on the region and just wide enough for its stars on screen.
-        const dy = py - star.y, cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
-        let rad = 0;
-        for (const o of stars) if (!o.filler && o.p[2] === star.p[2]) rad = Math.max(rad, Math.hypot(o.x - cx, o.y - (cy - dy)));
-        if (!rad) rad = reg.radius * SPREAD * Math.sqrt(sky.sx * sky.sy);
-        g.globalAlpha = alpha; g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
-        g.beginPath(); g.arc(cx, cy, Math.max(12, rad + 10), 0, Math.PI * 2); g.stroke();
-        g.setLineDash([]);
-      }
-    }
+    // The circle bounds this star's cluster: same-region stars near it (within 140 px, radius at most 130 px), centred on
+    // their middle. It works the same for every star, large or small.
+    const group = stars.filter((o) => !o.hidden && o.p[2] === star.p[2] && Math.hypot(o.x - star.x, o.y - star.y) < 140);
+    if (!group.includes(star)) group.push(star);
+    const gx = group.reduce((a, o) => a + o.x, 0) / group.length, gy = group.reduce((a, o) => a + o.y, 0) / group.length;
+    const dy = py - star.y, rad = Math.min(130, Math.max(24, ...group.map((o) => Math.hypot(o.x - gx, o.y - gy) + 12)));
+    g.globalAlpha = alpha; g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
+    g.beginPath(); g.arc(gx, gy + dy, rad, 0, Math.PI * 2); g.stroke();
+    g.setLineDash([]);
     g.globalAlpha = alpha; g.strokeStyle = "#6edcaa"; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(px - 5, py - 5); g.lineTo(px + 5, py + 5); g.moveTo(px + 5, py - 5); g.lineTo(px - 5, py + 5); g.stroke();
     g.globalAlpha = 1;

@@ -388,3 +388,4 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .foot .wrap { max-width: none; padding: 0 clamp(24px, 4vw, 64px); }
 .foot-meta::before { left: clamp(24px, 4vw, 64px); right: clamp(24px, 4vw, 64px); }
 .foot .foot-meta { padding-top: 20px; }
+.foot { padding-top: clamp(24px, 4vw, 64px); }
