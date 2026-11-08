@@ -755,103 +755,104 @@ function searchDemo() {
   io.observe(root.querySelector(".search-box"));
 }
 
-/* ---------- Closing section: stars that are papers, and a slow parallax ----------
-   About 140 real papers from the collection are placed as stars in the sky above the Earth
-   (positions are decorative, not map positions). Hover or tap one to see its title, year and
-   region. The stars and the Earth move slower than the page as it scrolls. */
+/* ---------- Closing section: stars that are papers, with depth ----------
+   Real papers from the collection are scattered as stars in the sky above the Earth (decorative
+   positions, not map positions). Three depths: near stars are larger and brighter, far ones
+   smaller and fainter, and on desktop each depth drifts at its own speed as the page scrolls
+   (farther = slower relative to the page). They flicker in once, like the data circle's squares.
+   Hover or tap a star to see its title, year and region. */
 function getStars() {
   const section = document.querySelector(".get"), canvas = section?.querySelector(".get-stars"), D = window.INVECTUS_MAP;
   if (!canvas || !D) return;
   const tip = section.querySelector(".star-tip"), earth = section.querySelector(".get-earth");
-  const g = canvas.getContext("2d");
+  const g = canvas.getContext("2d"), flicker = new DotFlicker();
   const regions = new Map(D.regions.map((r) => [r.id, r.label]));
-  let seed = 9071;
-  const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-  const picks = Array.from({ length: 140 }, () => D.points[Math.floor(rand() * D.points.length)]);
-  let stars = [], W = 0, H = 0, hot = -1, frame, shown = false, copy;
-  // Phones and tablets: no parallax and no twinkle loop. Moving a screen-blended photo under
-  // blurred glass every frame is too heavy for mobile GPUs and made scrolling stutter.
+  // Phones and tablets: no parallax (too heavy under the blurred glass); stars stay still.
   const light = reduced || matchMedia("(pointer: coarse), (max-width: 1024px)").matches;
+  // depth: size (px), opacity, parallax factor (share of the scroll the layer cancels out)
+  const DEPTHS = [{ size: 3, alpha: 0.62, drift: 0.22, share: 0.18 }, { size: 2, alpha: 0.36, drift: 0.34, share: 0.32 }, { size: 1.4, alpha: 0.2, drift: 0.46, share: 0.5 }];
+  const COUNT = 340;
+  // The Earth's horizon in the photo (top of the atmosphere glow), as a share of image height at
+  // each 5% of its width, measured from assets/earth.jpg. No star is drawn below it.
+  const HORIZON = [0.193, 0.199, 0.207, 0.218, 0.226, 0.237, 0.251, 0.272, 0.293, 0.318, 0.342, 0.371, 0.403, 0.435, 0.469, 0.507, 0.547, 0.59, 0.636, 0.683, 0.73];
+  function horizonY(x, cr, er) {
+    const t = Math.max(0, Math.min(1, (x - (er.left - cr.left)) / er.width)) * 20, i = Math.min(19, Math.floor(t));
+    return er.top - cr.top + (HORIZON[i] + (HORIZON[i + 1] - HORIZON[i]) * (t - i)) * er.height;
+  }
+  let stars = [], W = 0, H = 0, hot = -1, frame, shown = false, visible = false, offset = 0;
   function layout() {
     const r = canvas.getBoundingClientRect(), sr = section.getBoundingClientRect();
     W = r.width; H = r.height;
     if (!W || !H) return;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    // Keep stars out from behind the copy, and in the sky above the horizon.
     const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());
-    copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
-    const skyBottom = sr.bottom - r.top - sr.height * (W < 760 ? 0.42 : 0.38);
-    // Even coverage: one star per cell of a grid sized for ~140 stars, jittered within its cell.
-    seed = 9071; for (let i = 0; i < 140; i++) rand(); // same placement on every layout
-    const cell = Math.sqrt((W * skyBottom) / 140), cols = Math.max(1, Math.round(W / cell)), rows = Math.max(1, Math.round(skyBottom / cell));
-    const cw = W / cols, ch = skyBottom / rows;
-    stars = []; let n = 0;
-    for (let row = 0; row < rows; row++) for (let col = 0; col < cols; col++) {
-      const x = (col + 0.15 + rand() * 0.7) * cw, y = (row + 0.15 + rand() * 0.7) * ch;
-      if (x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16) continue;
-      stars.push({ x: Math.round(x), y: Math.round(y), p: picks[n++ % picks.length], key: `s:${row}:${col}` });
+    const copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
+    let seed = 9071;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    stars = [];
+    for (let i = 0; i < COUNT * 3 && stars.length < COUNT; i++) {
+      const x = rand() * W, y = rand() * H;
+      const depth = DEPTHS[rand() < 0.2 ? 0 : rand() < 0.45 ? 1 : 2];
+      // Near stars keep clear of the copy; faint far ones may sit closer to it.
+      const pad = depth === DEPTHS[0] ? 24 : 8;
+      if (x > copy.l - pad && x < copy.rt + pad && y > copy.t - pad && y < copy.b + pad) continue;
+      const p = D.points[Math.floor(rand() * D.points.length)];
+      stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p, key: `s:${i}` });
     }
-    if (shown) flicker.sync(stars.map((s) => s.key), performance.now());
+    stars.sort((a, b) => a.d.size - b.d.size); // far first, near on top
+    if (shown) flicker.sync(stars.map((st) => st.key), performance.now());
     draw();
   }
-  // Twinkle with the data circle's flicker: every so often a few stars replay the step sequence
-  // they flicker in with (dot-flicker.ts), then hold steady.
-  const flicker = new DotFlicker();
-  const STAR = 3;
-  function twinkle() {
-    if (!shown || !visible || reduced || !stars.length) return;
-    const now = performance.now();
-    for (let i = 0; i < 2; i++) flicker.starts.set(stars[Math.floor(Math.random() * stars.length)].key, now + Math.random() * 200);
-    flicker.until = Math.max(flicker.until, now + 200 + DOT_FLICKER_MS);
-    draw();
-  }
-  setInterval(twinkle, 260);
+  const at = (s) => [s.x, s.y + (light ? 0 : -offset * s.d.drift)];
   function draw() {
     cancelAnimationFrame(frame);
     const now = performance.now();
     g.clearRect(0, 0, W, H);
+    const cr = canvas.getBoundingClientRect(), er = earth?.getBoundingClientRect();
     stars.forEach((s, i) => {
-      const on = i === hot;
-      g.globalAlpha = shown ? (on ? 1 : 0.55 * flicker.opacity(s.key, now)) : 0;
+      const on = i === hot, [x, y] = at(s), size = on ? Math.max(4, s.d.size + 2) : s.d.size;
+      s.hidden = !!er && y > horizonY(x, cr, er) - 14; // never on the Earth or its glow
+      if (s.hidden) return;
+      g.globalAlpha = shown ? (on ? 1 : s.d.alpha * flicker.opacity(s.key, now)) : 0;
       g.fillStyle = on ? "#6edcaa" : "#e9e4dc";
-      const size = on ? STAR + 2 : STAR;
-      g.fillRect(s.x - size / 2, s.y - size / 2, size, size);
+      g.fillRect(x - size / 2, y - size / 2, size, size);
     });
     g.globalAlpha = 1;
-    if (shown && visible && flicker.pending(now)) frame = requestAnimationFrame(draw);
+    if (shown && flicker.pending(now)) frame = requestAnimationFrame(draw);
   }
   function pick(e) {
     const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-    let best = -1, bd = 14 * 14;
-    stars.forEach((s, i) => { const d = (s.x - x) ** 2 + (s.y - y) ** 2; if (d < bd) { bd = d; best = i; } });
+    let best = -1, bd = 12 * 12;
+    stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
     if (best !== hot) { hot = best; draw(); }
     if (best < 0) { tip.hidden = true; return; }
-    const [, , fine, role, year, ti] = stars[best].p, sr = section.getBoundingClientRect();
+    const [, , fine, , year, ti] = stars[best].p, sr = section.getBoundingClientRect(), [sx, sy] = at(stars[best]);
     tip.innerHTML = `${esc(D.titles[ti])}<span>${year ?? ""}${year ? " · " : ""}${esc(regions.get(fine) ?? "")}</span>`;
     tip.hidden = false;
-    const tx = stars[best].x + r.left - sr.left, ty = stars[best].y + r.top - sr.top;
-    tip.style.left = `${Math.min(tx + 14, sr.width - tip.offsetWidth - 12)}px`;
-    tip.style.top = `${ty + 14}px`;
+    tip.style.left = `${Math.min(sx + r.left - sr.left + 14, sr.width - tip.offsetWidth - 12)}px`;
+    tip.style.top = `${sy + r.top - sr.top + 14}px`;
   }
   section.addEventListener("pointermove", pick);
   section.addEventListener("pointerdown", pick);
   section.addEventListener("pointerleave", () => { hot = -1; tip.hidden = true; draw(); });
 
-  // Parallax: the background drifts slower than the page while the section is on screen.
-  let visible = false, ticking = false;
+  // Parallax (desktop): each star depth and the Earth drift at their own speed.
+  let ticking = false;
   function parallax() {
     ticking = false;
     if (light) return;
-    const r = section.getBoundingClientRect(), offset = r.top - innerHeight / 2 + r.height / 2;
-    canvas.style.setProperty("--stars-py", `${(-offset * 0.35).toFixed(1)}px`);
-    earth?.style.setProperty("--earth-py", `${(-offset * 0.18).toFixed(1)}px`);
-    if (!tip.hidden) tip.hidden = true;
+    const r = section.getBoundingClientRect();
+    offset = r.top - innerHeight / 2 + r.height / 2;
+    earth?.style.setProperty("--earth-py", `${(-offset * 0.12).toFixed(1)}px`);
+    if (!tip.hidden) { tip.hidden = true; hot = -1; }
+    draw();
   }
   addEventListener("scroll", () => { if (!light && visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
-    if (visible) { if (!shown) { shown = true; flicker.sync(stars.map((st) => st.key), performance.now()); } parallax(); draw(); }
+    if (visible && !shown) { shown = true; flicker.sync(stars.map((st) => st.key), performance.now()); }
+    if (visible) parallax(), draw();
   }, { threshold: 0 }).observe(section);
   let rt;
   new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(layout, 100); }).observe(section);
