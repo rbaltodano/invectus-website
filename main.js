@@ -755,6 +755,96 @@ function searchDemo() {
   io.observe(root.querySelector(".search-box"));
 }
 
+/* ---------- Closing section: stars that are papers, and a slow parallax ----------
+   About 140 real papers from the collection are placed as stars in the sky above the Earth
+   (positions are decorative, not map positions). Hover or tap one to see its title, year and
+   region. The stars and the Earth move slower than the page as it scrolls. */
+function getStars() {
+  const section = document.querySelector(".get"), canvas = section?.querySelector(".get-stars"), D = window.INVECTUS_MAP;
+  if (!canvas || !D) return;
+  const tip = section.querySelector(".star-tip"), earth = section.querySelector(".get-earth");
+  const g = canvas.getContext("2d");
+  const regions = new Map(D.regions.map((r) => [r.id, r.label]));
+  let seed = 9071;
+  const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+  const picks = Array.from({ length: 140 }, () => D.points[Math.floor(rand() * D.points.length)]);
+  let stars = [], W = 0, H = 0, hot = -1, frame, shown = false, copy;
+  function layout() {
+    const r = canvas.getBoundingClientRect(), sr = section.getBoundingClientRect();
+    W = r.width; H = r.height;
+    if (!W || !H) return;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Keep stars out from behind the copy, and in the sky above the horizon.
+    const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());
+    copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
+    const skyBottom = sr.bottom - r.top - sr.height * (W < 760 ? 0.42 : 0.38);
+    seed = 9071; for (let i = 0; i < 140; i++) rand(); // same placement on every layout
+    stars = [];
+    for (const p of picks) {
+      for (let tries = 0; tries < 12; tries++) {
+        const x = rand() * W, y = rand() * skyBottom;
+        const behindCopy = x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16;
+        if (behindCopy) continue;
+        stars.push({ x, y, p, size: rand() < 0.15 ? 2.6 : rand() < 0.5 ? 1.8 : 1.2, phase: rand() * Math.PI * 2, speed: 0.4 + rand() * 0.8 });
+        break;
+      }
+    }
+    draw();
+  }
+  function draw() {
+    cancelAnimationFrame(frame);
+    const t = performance.now() / 1000;
+    g.clearRect(0, 0, W, H);
+    stars.forEach((s, i) => {
+      const twinkle = reduced ? 1 : 0.65 + 0.35 * Math.sin(t * s.speed + s.phase);
+      const on = i === hot;
+      g.globalAlpha = (shown ? 1 : 0) * (on ? 1 : 0.55 * twinkle);
+      g.fillStyle = on ? "#6edcaa" : "#e9e4dc";
+      const r = on ? 3.4 : s.size;
+      g.beginPath(); g.arc(s.x, s.y, r, 0, Math.PI * 2); g.fill();
+      if (on) { g.globalAlpha = 0.25; g.beginPath(); g.arc(s.x, s.y, 9, 0, Math.PI * 2); g.fill(); }
+    });
+    g.globalAlpha = 1;
+    if (!reduced && shown && visible) frame = requestAnimationFrame(draw);
+  }
+  function pick(e) {
+    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = -1, bd = 14 * 14;
+    stars.forEach((s, i) => { const d = (s.x - x) ** 2 + (s.y - y) ** 2; if (d < bd) { bd = d; best = i; } });
+    if (best !== hot) { hot = best; draw(); }
+    if (best < 0) { tip.hidden = true; return; }
+    const [, , fine, role, year, ti] = stars[best].p, sr = section.getBoundingClientRect();
+    tip.innerHTML = `${esc(D.titles[ti])}<span>${year ?? ""}${year ? " · " : ""}${esc(regions.get(fine) ?? "")}</span>`;
+    tip.hidden = false;
+    const tx = stars[best].x + r.left - sr.left, ty = stars[best].y + r.top - sr.top;
+    tip.style.left = `${Math.min(tx + 14, sr.width - tip.offsetWidth - 12)}px`;
+    tip.style.top = `${ty + 14}px`;
+  }
+  section.addEventListener("pointermove", pick);
+  section.addEventListener("pointerdown", pick);
+  section.addEventListener("pointerleave", () => { hot = -1; tip.hidden = true; draw(); });
+
+  // Parallax: the background drifts slower than the page while the section is on screen.
+  let visible = false, ticking = false;
+  function parallax() {
+    ticking = false;
+    if (reduced) return;
+    const r = section.getBoundingClientRect(), offset = r.top - innerHeight / 2 + r.height / 2;
+    canvas.style.setProperty("--stars-py", `${(-offset * 0.35).toFixed(1)}px`);
+    earth?.style.setProperty("--earth-py", `${(-offset * 0.18).toFixed(1)}px`);
+    if (!tip.hidden) tip.hidden = true;
+  }
+  addEventListener("scroll", () => { if (visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
+  new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    if (visible) { shown = true; parallax(); draw(); }
+  }, { threshold: 0 }).observe(section);
+  let rt;
+  new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(layout, 100); }).observe(section);
+  (document.fonts?.ready ?? Promise.resolve()).then(layout);
+}
+
 /* ---------- Copy the install command ---------- */
 function copyButtons() {
   document.querySelectorAll(".copy[data-copy]").forEach((b) => b.addEventListener("click", async () => {
@@ -839,6 +929,7 @@ heroMap();
 agentChat();
 searchDemo();
 copyButtons();
+getStars();
 footerMark();
 downloadButton();
 reveals();
