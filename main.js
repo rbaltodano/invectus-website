@@ -769,6 +769,9 @@ function getStars() {
   const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
   const picks = Array.from({ length: 140 }, () => D.points[Math.floor(rand() * D.points.length)]);
   let stars = [], W = 0, H = 0, hot = -1, frame, shown = false, copy;
+  // Phones and tablets: no parallax and no twinkle loop. Moving a screen-blended photo under
+  // blurred glass every frame is too heavy for mobile GPUs and made scrolling stutter.
+  const light = reduced || matchMedia("(pointer: coarse), (max-width: 1024px)").matches;
   function layout() {
     const r = canvas.getBoundingClientRect(), sr = section.getBoundingClientRect();
     W = r.width; H = r.height;
@@ -797,7 +800,7 @@ function getStars() {
     const t = performance.now() / 1000;
     g.clearRect(0, 0, W, H);
     stars.forEach((s, i) => {
-      const twinkle = reduced ? 1 : 0.65 + 0.35 * Math.sin(t * s.speed + s.phase);
+      const twinkle = light ? 0.85 : 0.65 + 0.35 * Math.sin(t * s.speed + s.phase);
       const on = i === hot;
       g.globalAlpha = (shown ? 1 : 0) * (on ? 1 : 0.55 * twinkle);
       g.fillStyle = on ? "#6edcaa" : "#e9e4dc";
@@ -806,7 +809,7 @@ function getStars() {
       if (on) { g.globalAlpha = 0.25; g.beginPath(); g.arc(s.x, s.y, 9, 0, Math.PI * 2); g.fill(); }
     });
     g.globalAlpha = 1;
-    if (!reduced && shown && visible) frame = requestAnimationFrame(draw);
+    if (!light && shown && visible) frame = requestAnimationFrame(draw);
   }
   function pick(e) {
     const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -829,13 +832,13 @@ function getStars() {
   let visible = false, ticking = false;
   function parallax() {
     ticking = false;
-    if (reduced) return;
+    if (light) return;
     const r = section.getBoundingClientRect(), offset = r.top - innerHeight / 2 + r.height / 2;
     canvas.style.setProperty("--stars-py", `${(-offset * 0.35).toFixed(1)}px`);
     earth?.style.setProperty("--earth-py", `${(-offset * 0.18).toFixed(1)}px`);
     if (!tip.hidden) tip.hidden = true;
   }
-  addEventListener("scroll", () => { if (visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
+  addEventListener("scroll", () => { if (!light && visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
     if (visible) { shown = true; parallax(); draw(); }
