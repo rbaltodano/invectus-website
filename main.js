@@ -985,22 +985,22 @@ function copyButtons() {
    Squares flicker in when the footer appears; near the cursor they light up in the accent.
    The bottom of the letters runs off the page, like the hero circle. */
 function footerMark() {
-  // The wordmark drawn like the stars above it: each point gets a random depth (size, opacity and
-  // how far it shifts with the cursor), points jitter slightly off the grid, and they flicker in
-  // half a second after the footer arrives. Points near the cursor still light up mint.
+  // The wordmark drawn like the stars above it: each point gets a random depth (size and opacity),
+  // points jitter slightly off the grid, and they flicker in half a second after the footer
+  // arrives. After that, soft pulses brighten small random patches of the letters now and then.
   const canvas = document.querySelector(".foot-mark");
   if (!canvas) return;
   const g = canvas.getContext("2d");
   const ink = "#e9e4dc", accent = "#6edcaa", STEP = 6;
-  const DEPTHS = [{ size: 3, alpha: 0.5, shift: 7 }, { size: 2, alpha: 0.3, shift: 4 }, { size: 2, alpha: 0.15, shift: 1.5 }];
-  const fine = matchMedia("(pointer: fine)").matches && !reduced;
+  const DEPTHS = [{ size: 3, alpha: 0.5 }, { size: 2, alpha: 0.3 }, { size: 2, alpha: 0.15 }];
+  const PULSE_MS = 1400, PULSE_R = 34;
   const flicker = {
     starts: new Map(), until: 0,
     sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 500 + Math.random() * 1600; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
     opacity(k, now) { const t = this.starts.get(k); if (reduced || t === undefined || now >= t + 600) return 1; if (now < t) return 0; return [1, 0.2, 0.85, 0.35, 0.7, 0.5][Math.floor((now - t) / 600 * 6)]; },
     pending(now) { return now < this.until; },
   };
-  let dots = [], W = 0, H = 0, mouse = null, lean = { x: 0, y: 0 }, aim = { x: 0, y: 0 }, frame, shown = false;
+  let dots = [], W = 0, H = 0, frame, shown = false, visible = false, pulses = [];
   function layout() {
     W = canvas.getBoundingClientRect().width;
     if (!W) return;
@@ -1023,7 +1023,7 @@ function footerMark() {
       if (data[(Math.floor(y) * off.width + Math.floor(x)) * 4 + 3] <= 128) continue;
       if (rand() < 0.18) continue; // gaps, like a starfield
       const r = rand(), d = DEPTHS[r < 0.25 ? 0 : r < 0.6 ? 1 : 2];
-      dots.push({ x: x + (rand() - 0.5) * 2, y: y + (rand() - 0.5) * 2, d, key: `${x},${y}`, glow: 0 });
+      dots.push({ x: x + (rand() - 0.5) * 2, y: y + (rand() - 0.5) * 2, d, key: `${x},${y}` });
     }
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.height = `${H}px`;
@@ -1035,32 +1035,32 @@ function footerMark() {
     cancelAnimationFrame(frame);
     const now = performance.now();
     g.clearRect(0, 0, W, H);
-    lean.x += (aim.x - lean.x) * 0.12; lean.y += (aim.y - lean.y) * 0.12;
-    let busy = flicker.pending(now) || Math.abs(aim.x - lean.x) + Math.abs(aim.y - lean.y) > 0.01;
+    pulses = pulses.filter((p) => now < p.t0 + PULSE_MS);
     for (const p of dots) {
-      const x = p.x + lean.x * p.d.shift, y = p.y + lean.y * p.d.shift;
-      const near = mouse ? Math.max(0, 1 - Math.hypot(x - mouse.x, y - mouse.y) / 90) : 0;
-      p.glow += (near - p.glow) * (reduced ? 1 : 0.18);
-      if (Math.abs(near - p.glow) > 0.01) busy = true;
+      // Pulse boost: a smooth rise and fall, strongest at the pulse's centre.
+      let boost = 0;
+      for (const q of pulses) {
+        const dist = Math.hypot(p.x - q.x, p.y - q.y);
+        if (dist < PULSE_R) boost = Math.max(boost, Math.sin(Math.PI * (now - q.t0) / PULSE_MS) * (1 - dist / PULSE_R));
+      }
       const o = shown ? flicker.opacity(p.key, now) : 0;
-      g.globalAlpha = Math.min(1, p.d.alpha + 0.5 * p.glow) * o;
-      g.fillStyle = p.glow > 0.05 ? accent : ink;
-      const s = p.d.size + (p.glow > 0.05 ? 1 : 0);
-      g.fillRect(Math.round(x - s / 2), Math.round(y - s / 2), s, s);
+      g.globalAlpha = Math.min(0.95, p.d.alpha + 0.6 * boost) * o;
+      g.fillStyle = ink;
+      g.fillRect(Math.round(p.x - p.d.size / 2), Math.round(p.y - p.d.size / 2), p.d.size, p.d.size);
     }
     g.globalAlpha = 1;
-    if (busy) frame = requestAnimationFrame(draw);
+    if (flicker.pending(now) || pulses.length) frame = requestAnimationFrame(draw);
   }
-  // Depth: on desktop the layers lean slightly with the cursor (near points move the most).
-  canvas.addEventListener("pointermove", (e) => {
-    const r = canvas.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top };
-    if (fine) aim = { x: (mouse.x / W - 0.5) * 2, y: (mouse.y / H - 0.5) * 2 };
+  // Every so often, while the footer is on screen, a pulse starts at a random point of the word.
+  setInterval(() => {
+    if (reduced || !shown || !visible || !dots.length || flicker.pending(performance.now())) return;
+    const p = dots[Math.floor(Math.random() * dots.length)];
+    pulses.push({ x: p.x, y: p.y, t0: performance.now() });
     draw();
-  });
-  canvas.addEventListener("pointerleave", () => { mouse = null; aim = { x: 0, y: 0 }; draw(); });
-  new IntersectionObserver((entries, io) => {
-    if (!entries.some((e) => e.isIntersecting)) return;
-    io.disconnect(); shown = true; flicker.sync(dots.map((p) => p.key), performance.now()); draw();
+  }, 650);
+  new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    if (visible && !shown) { shown = true; flicker.sync(dots.map((p) => p.key), performance.now()); draw(); }
   }, { threshold: 0.2 }).observe(canvas);
   let t;
   new ResizeObserver(() => { clearTimeout(t); t = setTimeout(layout, 100); }).observe(canvas);
