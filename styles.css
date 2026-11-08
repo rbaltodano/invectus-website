@@ -406,3 +406,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 #features .wrap { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .hero-gaps li { animation: none; opacity: 1; } }
 @media (max-width: 760px) { .foot { margin: 0; border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; } }
+/* The page ends in the black space background; the root colour matches it so Safari's toolbar
+   area and the bottom overscroll show black instead of a grey band. Sections paint their own. */
+html { background: #000; }
+body { background: transparent; }

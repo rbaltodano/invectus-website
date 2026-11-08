@@ -1032,8 +1032,14 @@ function footerMark() {
   const canvas = document.querySelector(".foot-mark");
   if (!canvas) return;
   const g = canvas.getContext("2d");
-  const ink = "#e9e4dc", accent = "#6edcaa", STEP = 6;
-  const DEPTHS = [{ size: 3, alpha: 0.5 }, { size: 2, alpha: 0.3 }, { size: 2, alpha: 0.15 }];
+  const ink = "#e9e4dc", accent = "#6edcaa";
+  // Finer grid and smaller points on phones, so the letters keep their detail when the word is small.
+  let STEP = 6, DEPTHS = [];
+  const setGrid = () => {
+    const small = W < 760;
+    STEP = small ? 3 : 6;
+    DEPTHS = small ? [{ size: 2, alpha: 0.55 }, { size: 1, alpha: 0.4 }, { size: 1, alpha: 0.2 }] : [{ size: 3, alpha: 0.5 }, { size: 2, alpha: 0.3 }, { size: 2, alpha: 0.15 }];
+  };
   const PULSE_MS = 2600, PULSE_R = 80, RING = 14;
   const flicker = {
     starts: new Map(), until: 0,
@@ -1060,11 +1066,12 @@ function footerMark() {
     let seed = 4211;
     const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
     dots = [];
+    setGrid();
     for (let y = STEP / 2; y < H; y += STEP) for (let x = STEP / 2; x < W; x += STEP) {
       if (data[(Math.floor(y) * off.width + Math.floor(x)) * 4 + 3] <= 128) continue;
-      if (rand() < 0.18) continue; // gaps, like a starfield
+      if (rand() < (STEP < 6 ? 0.1 : 0.18)) continue; // gaps, like a starfield
       const r = rand(), d = DEPTHS[r < 0.25 ? 0 : r < 0.6 ? 1 : 2];
-      dots.push({ x: x + (rand() - 0.5) * 2, y: y + (rand() - 0.5) * 2, d, key: `${x},${y}` });
+      dots.push({ x: x + (rand() - 0.5) * STEP / 3, y: y + (rand() - 0.5) * STEP / 3, d, key: `${x},${y}` });
     }
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.height = `${H}px`;
