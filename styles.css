@@ -131,14 +131,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 @media (max-width: 900px) { .search-demo { grid-template-columns: 1fr; } }
 .search-box { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 14px 16px; border: 1px solid var(--line-2); border-radius: var(--r); font-size: 16px; font-weight: 300; color: var(--ink); }
 .search-box svg { flex: none; color: var(--dim); }
-.search-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 28px; }
-.chip { position: relative; isolation: isolate; overflow: hidden; border: 1px solid var(--line-2); border-radius: 999px; background: none; color: var(--dim); font: inherit; font-size: 12.5px; padding: 6px 12px; cursor: pointer; transition: color 300ms ease, border-color 300ms ease, background 300ms ease; }
-.chip-fill { position: absolute; inset: 0; z-index: -1; background: rgba(255, 255, 255, 0.08); transform: scaleX(0); transform-origin: left; pointer-events: none; }
-.chip-label { display: inline-block; }
-.chip.is-next { border-color: rgba(255, 255, 255, 0.3); }
-.chip:hover, .chip:focus-visible { color: var(--ink); border-color: var(--ink); }
-.chip[aria-pressed="true"] { color: var(--bg); background: var(--ink); border-color: var(--ink); }
-.search-result { min-height: 420px; }
+.search-result { min-height: 420px; margin-top: 24px; }
 .verdict { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 6px; font-size: 15px; }
 .verdict::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
 .verdict.open { color: var(--accent); }

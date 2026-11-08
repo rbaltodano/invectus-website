@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=a1dfd67dd563">
+  <link rel="stylesheet" href="styles.css?v=edec1e2e957a">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -79,13 +79,12 @@
       <div class="wrap">
         <div class="verdict-intro">
           <h2 id="verdict-title">Check Any Idea Against Your Data.</h2>
-          <p>Pick an idea. inVectus compares it with every paper in the same 5,000-paper collection, shows the nearest ones on the map and gives a verdict calibrated on that collection.</p>
+          <p>inVectus compares an idea with every paper in the same 5,000-paper collection, shows the nearest ones on the map and gives a verdict calibrated on that collection.</p>
         </div>
         <div class="search-demo">
           <div class="search-side">
-            <div class="search-box" aria-live="polite"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="search-text"></span></div>
-            <div class="search-chips" role="group" aria-label="Example ideas"></div>
-            <div class="search-result">
+            <div class="search-box" aria-label="Example search query"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><span class="search-text"></span></div>
+            <div class="search-result fading" aria-live="polite" aria-atomic="true" aria-busy="true">
               <p class="verdict"></p>
               <p class="search-summary"></p>
               <ol class="hits"></ol>
@@ -94,7 +93,7 @@
           </div>
           <div class="search-map-wrap"><canvas class="search-map" role="img" aria-label="The nearest papers on the collection map; positions are for browsing only"></canvas></div>
         </div>
-        <p class="figure-note">Real results from <code>invectus check</code> on the Ophthalmology Research collection, precomputed for these examples. Verdicts hold for this collection only; they never imply global novelty.</p>
+        <p class="figure-note fading">Real results from <code>invectus check</code> on the Ophthalmology Research collection, precomputed for this example. Verdicts hold for this collection only; they never imply global novelty.</p>
       </div>
     </section>
 
@@ -200,7 +199,7 @@
 
   <script src="assets/ophthalmology-map.js" defer></script>
   <script src="assets/search-examples.js" defer></script>
-  <script src="main.js?v=4e632bd8e352" defer></script>
+  <script src="main.js?v=6b70a147a2ee" defer></script>
   <script src="lightbox.js" defer></script>
 </body>
 </html>
