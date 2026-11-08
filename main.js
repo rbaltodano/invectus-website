@@ -968,10 +968,8 @@ function getStars() {
     stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
     return best;
   }
-  // Selection: a star is shown (× , circle and card) only when selected, never on hover.
-  // Every 5 s a random star on screen is selected; a star the visitor clicks stays selected for
-  // 15 s or until it is clicked again, then the random tour resumes.
-  let userUntil = 0, nextAuto = 0;
+  // Selection: a star is shown (×, circle and card) only when clicked, never on hover; clicking
+  // it again clears it.
   function select(star) {
     const now = performance.now(), was = pinned;
     pinned = star;
@@ -980,31 +978,11 @@ function getStars() {
     draw();
     if (star) showTip(star); else tip.hidden = true;
   }
-  function onScreen(st) {
-    if (st.hidden) return false;
-    const r = canvas.getBoundingClientRect(), [x, y] = at(st), vy = y + r.top, ft = foot?.getBoundingClientRect().top ?? innerHeight;
-    return x > 40 && x < W - 300 && vy > 80 && vy < Math.min(innerHeight, ft) - 140;
-  }
-  function randomStar() {
-    const pool = stars.filter((st) => st !== pinned && onScreen(st));
-    return pool.length ? pool[Math.floor(Math.random() * pool.length)] : null;
-  }
   section.addEventListener("click", (e) => {
     const i = starAt(e);
     if (i < 0) return;
-    const now = performance.now();
-    if (stars[i] === pinned) { select(null); userUntil = 0; nextAuto = now + 5000; return; }
-    select(stars[i]); userUntil = now + 15000;
+    select(stars[i] === pinned ? null : stars[i]);
   });
-  setInterval(() => {
-    const now = performance.now();
-    if (!shown || !visible || document.hidden || flicker.pending(now)) return;
-    if (userUntil) { if (now < userUntil) return; userUntil = 0; nextAuto = 0; }
-    if (now < nextAuto) return;
-    const st = randomStar();
-    if (st) select(st);
-    nextAuto = now + 5000;
-  }, 250);
   // Hover only changes the cursor over a star.
   section.addEventListener("pointermove", (e) => { section.style.cursor = starAt(e) >= 0 ? "pointer" : ""; });
 
