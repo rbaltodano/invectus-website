@@ -779,7 +779,7 @@ function getStars() {
   // Phones and tablets: no parallax (too heavy under the blurred glass); stars stay still.
   const light = reduced || matchMedia("(pointer: coarse), (max-width: 1024px)").matches;
   // depth: size (px), opacity, parallax factor (share of the scroll the layer cancels out)
-  const DEPTHS = [{ size: 3, alpha: 0.62, drift: 0.22, share: 0.18 }, { size: 2, alpha: 0.36, drift: 0.34, share: 0.32 }, { size: 1.4, alpha: 0.2, drift: 0.46, share: 0.5 }];
+  const DEPTHS = [{ size: 3, alpha: 0.62, drift: 0.22, share: 0.18 }, { size: 2, alpha: 0.36, drift: 0.34, share: 0.32 }, { size: 2, alpha: 0.18, drift: 0.46, share: 0.5 }]; // whole-pixel sizes keep every star a crisp square
   const COUNT = 340;
   let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
   for (const [x, y] of D.points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
@@ -812,7 +812,7 @@ function getStars() {
     const copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
     let seed = 9071;
     const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    stars = []; pinned = null;
+    stars = []; pinned = null; pins = [];
     // Stars sit at their papers' real map positions, stretched across the sky above the footer,
     // so the collection's clusters read as constellations. sky maps map coords to canvas px.
     const skyH = Math.max(200, (Number.isFinite(footTop) ? footTop : H) - 40);
@@ -865,22 +865,48 @@ function getStars() {
       if (s.hidden) return;
       g.globalAlpha = shown ? (on ? 1 : s.d.alpha * flicker.opacity(s.key, now)) : 0;
       g.fillStyle = on ? "#6edcaa" : "#e9e4dc";
-      g.fillRect(x - size / 2, y - size / 2, size, size);
+      g.fillRect(Math.round(x - size / 2), Math.round(y - size / 2), size, size);
     });
     g.globalAlpha = 1;
-    // A pinned paper: its region's bounds as a dashed outline and a mint ×, as in the data circle.
-    if (pinned && !pinned.hidden && shown) {
-      const reg = pinned.filler ? null : regionById.get(pinned.p[2]), [px, py] = at(pinned), dy = py - pinned.y;
+    // Pinned papers: a mint × and a dashed circle around the stars of its region, as in the data
+    // circle. Both flicker in when pinned and flicker out when cleared.
+    let busyPin = false;
+    pins = pins.filter((pn) => {
+      const o = pinOpacity(pn, now);
+      if (pn.out && now > pn.t0 + PIN_MS) return false;
+      if (now < pn.t0 + PIN_MS) busyPin = true;
+      if (o > 0 && !pn.star.hidden && shown) drawPin(pn.star, o);
+      return true;
+    });
+    if (shown && (flicker.pending(now) || busyPin)) frame = requestAnimationFrame(draw);
+  }
+  const PIN_MS = 300, PIN_LEVELS = [1, 0.2, 0.85, 0.35, 0.7, 0.5];
+  let pins = [];
+  function pinOpacity(pn, now) {
+    const p = (now - pn.t0) / PIN_MS;
+    if (p >= 1) return pn.out ? 0 : 1;
+    if (p < 0) return pn.out ? 1 : 0;
+    const level = PIN_LEVELS[Math.min(5, Math.floor(p * 6))];
+    return pn.out ? Math.min(level, 1 - p) : level;
+  }
+  function drawPin(star, alpha) {
+    const [px, py] = at(star);
+    if (!star.filler) {
+      const reg = regionById.get(star.p[2]);
       if (reg) {
-        const cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
-        g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
-        g.beginPath(); g.ellipse(cx, cy, Math.max(8, reg.radius * SPREAD * sky.sx), Math.max(8, reg.radius * SPREAD * sky.sy), 0, 0, Math.PI * 2); g.stroke();
+        // A true circle: centred on the region and just wide enough for its stars on screen.
+        const dy = py - star.y, cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
+        let rad = 0;
+        for (const o of stars) if (!o.filler && o.p[2] === star.p[2]) rad = Math.max(rad, Math.hypot(o.x - cx, o.y - (cy - dy)));
+        if (!rad) rad = reg.radius * SPREAD * Math.sqrt(sky.sx * sky.sy);
+        g.globalAlpha = alpha; g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
+        g.beginPath(); g.arc(cx, cy, Math.max(12, rad + 10), 0, Math.PI * 2); g.stroke();
         g.setLineDash([]);
       }
-      g.strokeStyle = "#6edcaa"; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(px - 5, py - 5); g.lineTo(px + 5, py + 5); g.moveTo(px + 5, py - 5); g.lineTo(px - 5, py + 5); g.stroke();
     }
-    if (shown && flicker.pending(now)) frame = requestAnimationFrame(draw);
+    g.globalAlpha = alpha; g.strokeStyle = "#6edcaa"; g.lineWidth = 1.5;
+    g.beginPath(); g.moveTo(px - 5, py - 5); g.lineTo(px + 5, py + 5); g.moveTo(px + 5, py - 5); g.lineTo(px - 5, py + 5); g.stroke();
+    g.globalAlpha = 1;
   }
   function showTip(star) {
     if (!star || star.hidden) { tip.hidden = true; return; }
@@ -901,7 +927,10 @@ function getStars() {
   section.addEventListener("click", (e) => {
     const i = starAt(e);
     if (i < 0) return;
+    const now = performance.now(), was = pinned;
     pinned = pinned === stars[i] ? null : stars[i];
+    if (was) { pins = pins.filter((pn) => pn.star !== was); pins.push({ star: was, t0: now, out: true }); }
+    if (pinned) pins.push({ star: pinned, t0: now, out: false });
     draw(); showTip(pinned ?? stars[i]);
     if (!pinned) tip.hidden = true;
   });

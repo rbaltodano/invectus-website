@@ -190,7 +190,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 /* Footer: a glass card inside the space background, like the install command box. */
 .foot { position: relative; z-index: 2; overflow: hidden; margin: 24px; border-radius: 48px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(80px); backdrop-filter: blur(80px); padding: clamp(48px, 7vw, 88px) 0 0; font-size: 13.5px; }
 .foot-top { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
-.foot-brand img { display: block; height: 26px; width: auto; margin-bottom: 20px; }
+.foot-brand img { display: block; height: 36px; width: auto; margin-bottom: 22px; }
 .foot-brand p { color: var(--dim); max-width: 34ch; }
 .foot-status { display: inline-flex; align-items: center; gap: 10px; margin-top: 8px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; }
 .foot-status .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: agent-pulse 1.6s ease-in-out infinite; }
@@ -384,3 +384,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .get-stars { z-index: 2; }
 .get, .get .get-center, .foot { z-index: 3; }
 .star-tip { z-index: 4; }
+/* Footer content spans the whole card, with the card's own padding instead of the page column. */
+.foot .wrap { max-width: none; padding: 0 clamp(24px, 4vw, 64px); }
+.foot-meta::before { left: clamp(24px, 4vw, 64px); right: clamp(24px, 4vw, 64px); }
+.foot .foot-meta { padding-top: 20px; }
