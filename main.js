@@ -1001,7 +1001,7 @@ function footerMark() {
     opacity(k, now) { const t = this.starts.get(k); if (reduced || t === undefined || now >= t + 600) return 1; if (now < t) return 0; return [1, 0.2, 0.85, 0.35, 0.7, 0.5][Math.floor((now - t) / 600 * 6)]; },
     pending(now) { return now < this.until; },
   };
-  let dots = [], W = 0, H = 0, frame, shown = false, visible = false, pulses = [];
+  let dots = [], W = 0, H = 0, frame, shown = false, shownAt = 0, visible = false, pulses = [];
   function layout() {
     W = canvas.getBoundingClientRect().width;
     if (!W) return;
@@ -1058,7 +1058,9 @@ function footerMark() {
   }
   // Every so often, while the footer is on screen, a pulse starts at a random point of the word.
   setInterval(() => {
-    if (reduced || !shown || !visible || !dots.length || flicker.pending(performance.now())) return;
+    // Blips start about a second into the entrance (the first points are in by then); a blip on a
+    // point that has not appeared yet stays invisible there until it flickers in.
+    if (reduced || !shown || !visible || !dots.length || performance.now() < shownAt + 1000) return;
     // One to three blips at a time, at random points, a little offset in time.
     const n = 1 + Math.floor(Math.random() * 3), now = performance.now();
     for (let i = 0; i < n; i++) {
@@ -1069,7 +1071,7 @@ function footerMark() {
   }, 900);
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
-    if (visible && !shown) { shown = true; flicker.sync(dots.map((p) => p.key), performance.now()); draw(); }
+    if (visible && !shown) { shown = true; shownAt = performance.now(); flicker.sync(dots.map((p) => p.key), shownAt); draw(); }
   }, { threshold: 0.2 }).observe(canvas);
   let t;
   new ResizeObserver(() => { clearTimeout(t); t = setTimeout(layout, 100); }).observe(canvas);
