@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=6864e0cf97bb">
+  <link rel="stylesheet" href="styles.css?v=a1dfd67dd563">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -99,60 +99,55 @@
     </section>
 
     <section id="agents" class="agents reveal" aria-labelledby="agents-title">
-      <div class="wrap split">
-        <div>
+      <div class="wrap">
+        <div class="agents-intro">
           <h2 id="agents-title">Bring Claude or ChatGPT.</h2>
-          <p>Claude Code, Claude Desktop, Codex and Cursor can search, check ideas, list gaps and suggest decisions in your collection, on your own Claude or ChatGPT plan. Choose which model does future work in each project.</p>
-          <p class="dim">Suggestions wait for you to decide. The agent’s client starts <code>invectus mcp</code> on your computer; inVectus opens no network port and never touches your credentials.</p>
-          <pre class="term"><span class="dim">$</span> invectus connect add claude-code
-<span class="dim">$</span> invectus connect add codex</pre>
+          <p>Ask questions about your collection in the agent you already use. inVectus brings the search, the map and the evidence.</p>
         </div>
-        <figure class="app-window-wrap">
-          <div class="app-window">
-            <div class="win-body">
-              <div class="win-status"><span class="agent-pulse"></span><svg class="mark" width="14" height="14"><use href="#mark-claude"/></svg><span class="shimmer" data-text="Claude Code · reviewing gaps"></span></div>
-              <div class="suggestion">
-                <div class="sugg-head">
-                  <span class="tag">Agent suggestion</span>
-                  <div class="attr-wrap">
-                    <button type="button" class="agent-attribution" aria-expanded="true" aria-controls="model-pop" aria-label="Claude Opus 5.5 Medium; choose model">
-                      <svg class="mark" width="14" height="14"><use href="#mark-claude"/></svg><span>Claude Opus 5.5 Medium</span><svg width="12" height="12"><use href="#i-chevron"/></svg>
-                    </button>
-                    <div class="model-popover" id="model-pop" role="dialog" aria-label="Model for future work">
-                      <div class="model-selector" data-follow-current="true">
-                        <div class="model-provider" role="group" aria-label="Claude">
-                          <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark" width="16" height="16"><use href="#mark-claude"/></svg><span>Claude</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
-                          <div class="model-options">
-                            <button type="button" class="model-option" aria-pressed="true"><span>Claude Opus 5.5 Medium</span></button>
-                            <button type="button" class="model-option" aria-pressed="false"><span>Claude Opus 5.5 High</span></button>
-                          </div>
-                        </div>
-                        <div class="model-provider" role="group" aria-label="ChatGPT">
-                          <button type="button" class="model-provider-heading" aria-expanded="true"><svg class="mark openai" width="16" height="16"><use href="#mark-openai"/></svg><span>ChatGPT</span><svg class="push" width="12" height="12"><use href="#i-chevron"/></svg></button>
-                          <div class="model-options">
-                            <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol Medium</span></button>
-                            <button type="button" class="model-option" aria-pressed="false"><span>GPT-6.1 Sol High</span></button>
-                          </div>
-                        </div>
-                      </div>
-                      <div class="model-selector-note model-current-row">
-                        <span id="current-label">Use agent’s current model</span>
-                        <button type="button" role="switch" class="model-current-switch" aria-checked="true" aria-labelledby="current-label"><span></span></button>
-                      </div>
-                      <p class="model-selector-note dim">For future work in this project. Your agent app controls model switching.</p>
-                    </div>
-                  </div>
-                </div>
-                <p class="sugg-title"><span class="code">G-01</span> neurons · cortex · colliculus</p>
-                <p class="sugg-verdict">Confirmed gap</p>
-                <p class="sugg-note">105 demand papers and no review in this collection reaches this region. Worth a scoping search before you commit.</p>
-
+        <figure class="agent-story" aria-label="Example conversation grounded in the Ophthalmology Research collection">
+          <div class="agent-conversation">
+            <div class="story-toolbar">
+              <div class="story-providers" role="group" aria-label="Example assistant">
+                <button type="button" data-provider="claude" aria-pressed="true"><svg width="16" height="16" aria-hidden="true"><use href="#mark-claude"/></svg>Claude</button>
+                <button type="button" data-provider="chatgpt" aria-pressed="false"><svg width="16" height="16" aria-hidden="true"><use href="#mark-openai"/></svg>ChatGPT</button>
               </div>
+              <button type="button" class="story-replay" aria-label="Replay example conversation">Replay <span aria-hidden="true">↻</span></button>
+            </div>
+            <div class="story-thread">
+              <div class="story-question"><span class="story-speaker">You</span><p>Where is demand growing faster than coverage?</p></div>
+              <div class="story-tool"><span class="story-tool-dot" aria-hidden="true"></span><span class="story-tool-label">Collection evidence retrieved</span></div>
+              <div class="story-answer">
+                <div class="story-speaker"><svg class="story-assistant-mark" width="16" height="16" aria-hidden="true"><use href="#mark-claude"/></svg><span class="story-assistant-name">Claude</span></div>
+                <p>This region has 105 demand papers and no coverage reaching it. Activity is growing 32% a year. It’s a candidate for a scoping review, based on this collection.</p>
+              </div>
+              <div class="story-evidence"><span class="story-evidence-label">Supporting papers</span><ul class="story-papers"></ul></div>
             </div>
           </div>
+          <div class="story-map-panel">
+            <div class="story-map-header"><span>Ophthalmology Research</span><span class="story-map-count">5,000 papers</span></div>
+            <canvas class="story-map" role="img" aria-label="Real collection points around the neurons, cortex and colliculus region, highlighted as a potential coverage gap"></canvas>
+            <div class="story-region"><span class="story-region-code">G-01 · Potential gap</span><span>neurons · cortex · colliculus</span><div class="story-metrics"><span><b>105</b> demand</span><span><b>0</b> coverage</span><span><b>+32%</b> / year</span></div></div>
+          </div>
+          <figcaption>Illustrative conversation using real collection evidence. Potential gaps need review; they do not establish global novelty.</figcaption>
         </figure>
       </div>
+    </section>
+
+    <section id="connection" class="connection reveal" aria-labelledby="connection-title">
       <div class="wrap">
+        <div class="connection-intro"><p class="eyebrow">How it connects</p><h2 id="connection-title">One Local Connection.</h2><p>Your agent asks. inVectus searches your collection and returns evidence through its MCP server.</p></div>
+        <figure class="mcp-diagram" aria-label="On your computer: your agent app connects over stdio to the inVectus MCP server, which reads your local collection and returns evidence">
+          <figcaption class="mcp-boundary-label">On your computer</figcaption>
+          <div class="mcp-flow">
+            <div class="mcp-node"><div class="mcp-provider-marks" aria-hidden="true"><svg width="22" height="22"><use href="#mark-claude"/></svg><svg width="22" height="22"><use href="#mark-openai"/></svg></div><strong>Your agent app</strong><span>Claude Code · Claude Desktop<br>Codex · Cursor</span></div>
+            <div class="mcp-link"><span>stdio</span><div class="mcp-wire" aria-hidden="true"></div><small>Requests ↔ evidence</small></div>
+            <div class="mcp-node mcp-engine"><span class="mcp-node-kicker">inVectus</span><strong>MCP server</strong><code>invectus mcp</code><span>Search · check ideas · list gaps</span></div>
+            <div class="mcp-link"><span>Local files</span><div class="mcp-wire" aria-hidden="true"></div><small>Read ↔ results</small></div>
+            <div class="mcp-node"><span class="mcp-node-kicker">Your collection</span><strong>Documents &amp; vectors</strong><span>Evidence, regions<br>and saved decisions</span></div>
+          </div>
+        </figure>
+        <div class="connection-setup"><pre class="term"><span class="dim">$</span> invectus connect add claude-code
+<span class="dim">$</span> invectus connect add codex</pre><p class="dim">No listening network port. The agent client starts the local server. Your chosen agent may send prompts and tool results to its provider.</p></div>
         <dl class="figures" id="privacy" aria-label="Privacy">
           <div style="--i:0"><dt>Offline by default</dt><dd>Import, embeddings, search, regions and gap scans run locally. Model downloads and PubMed/OpenAlex checks need explicit network access.</dd></div>
           <div style="--i:1"><dt>No open port</dt><dd>Agents talk to inVectus over stdio. inVectus never reads, stores or sends tokens or credential files.</dd></div>
@@ -205,7 +200,7 @@
 
   <script src="assets/ophthalmology-map.js" defer></script>
   <script src="assets/search-examples.js" defer></script>
-  <script src="main.js?v=2072f3cda8d8" defer></script>
+  <script src="main.js?v=4e632bd8e352" defer></script>
   <script src="lightbox.js" defer></script>
 </body>
 </html>

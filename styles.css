@@ -184,54 +184,6 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 /* Agents */
 .term { margin: 24px 0 0; padding: 18px 20px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); font-family: var(--mono); font-size: 12.5px; line-height: 1.8; color: var(--ink); overflow-x: auto; }
 .term .dim { color: var(--dim); }
-/* App window with the model picker (src/AgentAttribution.tsx, src/ModelSelector.tsx). */
-.app-window-wrap { margin: 0; }
-.app-window-wrap figcaption { margin-top: 12px; font-size: 12px; color: var(--dim); }
-.app-window { border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); overflow: hidden; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); }
-.win-bar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #1b1b1b; border-bottom: 1px solid var(--line); }
-.win-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a3936; }
-.win-bar i:nth-child(1) { background: #ff5f57; } .win-bar i:nth-child(2) { background: #febc2e; } .win-bar i:nth-child(3) { background: #28c840; }
-.win-bar b { margin-left: 8px; font-size: 12px; font-weight: 400; color: var(--dim); }
-.win-body { padding: 18px 20px 24px; }
-.win-status { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-size: 12px; color: var(--dim); }
-.mark { flex: none; display: block; }
-.mark.openai { color: var(--ink); }
-.suggestion { position: relative; border: 1px dashed var(--line-2); border-radius: var(--r); padding: 16px; }
-.sugg-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.tag { flex: none; white-space: nowrap; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line-2); border-radius: var(--r); padding: 2px 6px; }
-.attr-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; max-width: 100%; gap: 4px; }
-.agent-attribution { display: inline-flex; align-items: center; justify-content: flex-start; text-align: left; gap: 6px; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; font-size: 12px; cursor: pointer; }
-.agent-attribution:hover, .agent-attribution[aria-expanded="true"] { color: var(--ink); }
-.sugg-title { margin: 0 0 4px; font-size: 14px; }
-.sugg-title .code { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--dim); margin-right: 8px; }
-.sugg-verdict { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; }
-.sugg-verdict::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
-.sugg-note { font-size: 13px; color: var(--dim); margin-bottom: 0; }
-.btn.small { min-height: 30px; padding: 4px 12px; font-size: 13px; }
-/* In the app it floats under the attribution; here it sits below the card so both stay readable. */
-.model-popover { position: relative; margin: 20px 0 0 auto; width: 280px; max-width: 100%; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); box-shadow: 0 8px 24px #0005; transform-origin: top right; }
-.model-popover[hidden] { display: none; }
-.model-popover:not([hidden]) { animation: pop-in 180ms ease-out both; }
-.model-selector { display: flex; flex-direction: column; gap: 24px; padding: 16px; }
-.model-provider, .model-options { display: flex; flex-direction: column; gap: 8px; }
-.model-provider-heading { display: flex; align-items: center; gap: 8px; padding: 0 8px; border: 0; background: none; color: var(--ink); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
-.model-provider-heading .push { margin-left: auto; transition: transform 150ms ease; }
-.model-provider-heading[aria-expanded="false"] .push { transform: rotate(-90deg); }
-.model-options { padding-left: 24px; }
-.model-options[hidden] { display: none; }
-.model-option { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; min-height: 28px; padding: 4px 8px; border: 0; border-radius: var(--r); background: none; color: var(--ink); font: inherit; font-size: 12px; text-align: left; cursor: pointer; }
-.model-option:hover, .model-option[aria-pressed="true"] { background: var(--surface-2); }
-.model-option svg { flex: none; color: var(--ink); }
-.model-selector[data-follow-current="true"] .model-option svg { color: var(--accent); }
-.model-selector-note { margin: 0; padding: 0 16px 16px; font-size: 11px; }
-.model-current-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--ink); }
-.model-current-switch { flex: none; width: 28px; height: 16px; padding: 2px; border: 1px solid var(--line-2); border-radius: 8px; background: var(--surface-2); cursor: pointer; }
-.model-current-switch > span { display: block; width: 10px; height: 10px; border-radius: 50%; background: var(--ink); transition: transform 150ms ease; }
-.model-current-switch[aria-checked="true"] { background: var(--accent); border-color: var(--accent); }
-.model-current-switch[aria-checked="true"] > span { transform: translateX(12px); background: var(--bg); }
-.model-current-switch:disabled { opacity: 0.45; cursor: default; }
-@keyframes pop-in { from { opacity: 0; transform: scale(0.97) translateY(-4px); } to { opacity: 1; transform: none; } }
-
 /* Privacy figures */
 .figures { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(24px, 4vw, 56px); margin: 40px 0 0; }
 .figures > div { border-top: 1px solid var(--line); padding-top: 20px; }
@@ -306,13 +258,6 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .verdict:empty { display: none; }
 .verdicts .verdict-intro h2 { max-width: 720px; margin-left: auto; margin-right: auto; }
 
-/* The model picker sits on the page (no window frame); its popover floats under the attribution, over the card, as in the app. */
-.app-window { border: 0; border-radius: 0; background: none; box-shadow: none; overflow: visible; }
-.app-window .win-body { padding: 0; min-height: 440px; }
-.app-window .suggestion { position: relative; }
-.app-window .attr-wrap { position: relative; }
-.app-window .model-popover { position: absolute; z-index: 5; top: calc(100% + 8px); right: 0; margin: 0; width: 280px; max-width: calc(100vw - 32px); }
-#agents .figures { margin-top: clamp(64px, 8vw, 112px); }
 .verdicts .figure-note { transition: opacity 300ms ease; }
 .verdicts .figure-note.fading { opacity: 0; transition-duration: 200ms; }
 
@@ -328,3 +273,65 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 @media (max-width: 640px) {
   .hero .map-controls { display: none; }
 }
+
+/* Conversation and map: one question, one grounded answer, one region. */
+.agents-intro, .connection-intro { max-width: 700px; margin-bottom: 40px; }
+.agents-intro h2, .connection-intro h2 { font-size: clamp(36px, 5vw, 64px); line-height: 1.06; text-wrap: balance; }
+.agent-story { margin: 0; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); column-gap: clamp(24px, 5vw, 64px); }
+.agent-story .agent-conversation { min-width: 0; border-top: 1px solid var(--line-2); }
+.agent-story .story-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0 24px; }
+.agent-story .story-providers { display: flex; gap: 6px; flex-wrap: wrap; }
+.agent-story .story-providers button, .agent-story .story-replay { display: inline-flex; align-items: center; gap: 8px; font: inherit; font-size: 12px; color: var(--dim); background: none; border: 0; padding: 7px 10px; border-radius: 6px; cursor: pointer; }
+.agent-story .story-providers button[aria-pressed="true"] { background: var(--surface-2); color: var(--ink); }
+.agent-story .story-providers svg, .agent-story .story-assistant-mark { flex: none; }
+.agent-story button:hover { color: var(--ink); }
+.agent-story button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.agent-story .story-thread { display: grid; gap: 22px; }
+.agent-story .story-speaker { display: flex; gap: 8px; align-items: center; font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+.agent-story .story-question { justify-self: end; max-width: 88%; padding: 14px 18px; border-radius: 14px 14px 4px 14px; background: var(--surface-2); }
+.agent-story p { margin: 0; max-width: none; font-size: 14px; line-height: 1.65; }
+.agent-story .story-tool { display: flex; align-items: center; gap: 8px; color: var(--dim); font-size: 11px; }
+.agent-story .story-tool-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); flex: none; }
+.agent-story .story-answer .story-speaker { color: var(--ink); }
+.agent-story .story-evidence { padding-top: 16px; border-top: 1px solid var(--line); }
+.agent-story .story-evidence-label { font-size: 11px; color: var(--dim); }
+.agent-story .story-papers { list-style: none; padding: 0; margin: 8px 0 0; display: grid; gap: 8px; }
+.agent-story .story-papers a { display: block; font-size: 12px; line-height: 1.5; text-decoration-color: var(--line-2); overflow-wrap: anywhere; }
+.agent-story .story-map-panel { min-width: 0; display: flex; flex-direction: column; background: var(--surface); border-radius: 10px; padding: 20px; }
+.agent-story .story-map-header { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; }
+.agent-story .story-map-count { color: var(--dim); }
+.agent-story .story-map { display: block; width: 100%; aspect-ratio: 1; margin: auto 0; }
+.agent-story .story-region { display: grid; gap: 8px; font-size: 13px; }
+.agent-story .story-region-code { font-family: var(--mono); color: var(--accent); font-size: 10px; }
+.agent-story .story-metrics { display: flex; flex-wrap: wrap; gap: 16px; font-size: 11px; color: var(--dim); }
+.agent-story .story-metrics b { color: var(--ink); font-size: 14px; font-weight: 400; }
+.agent-story > figcaption { grid-column: 1 / -1; font-size: 11px; color: var(--dim); margin-top: 20px; max-width: 76ch; }
+/* The MCP connection is a diagram, separate from the conversation. */
+.connection .mcp-diagram { margin: 0; padding: 24px; border: 1px dashed var(--line-2); border-radius: 12px; }
+.connection .mcp-boundary-label { color: var(--dim); font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 24px; }
+.connection .mcp-flow { display: grid; grid-template-columns: minmax(0, 1fr) minmax(70px, .5fr) minmax(0, 1.1fr) minmax(70px, .5fr) minmax(0, 1fr); align-items: center; }
+.connection .mcp-node { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 12px; min-height: 180px; padding: 20px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); }
+.connection .mcp-engine { background: var(--surface); border-color: var(--line-2); }
+.connection .mcp-node strong { font-weight: 400; font-size: 16px; line-height: 1.4; }
+.connection .mcp-node > span:last-child { font-size: 11px; color: var(--dim); line-height: 1.6; }
+.connection .mcp-node-kicker { font-size: 11px; color: var(--dim); }
+.connection .mcp-provider-marks { display: flex; gap: 12px; }
+.connection .mcp-link { display: grid; gap: 8px; text-align: center; font-size: 10px; color: var(--dim); }
+.connection .mcp-link small { font-size: 9px; line-height: 1.5; padding: 0 4px; }
+.connection .mcp-wire { height: 1px; background: var(--line-2); position: relative; }
+.connection .mcp-wire::after { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); position: absolute; top: -2px; left: 50%; }
+.connection .connection-setup { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); gap: 32px; align-items: center; margin-top: 24px; }
+.connection .connection-setup .term { margin: 0; }
+.connection .connection-setup p { margin: 0; font-size: 12px; }
+.connection .figures { margin-top: 64px; }
+@media (max-width: 900px) {
+  .agent-story { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+  .agent-story .story-map-panel { width: 100%; max-width: 520px; justify-self: center; }
+  .connection .mcp-flow { grid-template-columns: minmax(0, 1fr); }
+  .connection .mcp-node { min-height: 0; padding: 20px; }
+  .connection .mcp-link { min-height: 72px; display: flex; justify-content: center; align-items: center; gap: 12px; }
+  .connection .mcp-wire { width: 1px; height: 48px; order: -1; }
+  .connection .mcp-wire::after { left: -2px; top: 50%; }
+  .connection .connection-setup { grid-template-columns: minmax(0, 1fr); gap: 20px; }
+}
+@media (prefers-reduced-motion: reduce) { .agent-story .story-replay { display: none; } }

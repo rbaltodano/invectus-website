@@ -499,62 +499,79 @@ function heroMap() {
   introTimer = setTimeout(intro, reduced ? 300 : DOT_DELAY_MS + DOT_FLICKER_MS + 900);
 }
 
-/* ---------- Terminal-style shimmer (src/agents.tsx) ---------- */
-function shimmer(el) {
-  const text = el.dataset.text, chars = Array.from(text), HEAD = [1, 0.65], BASE = 0.35, PAUSE = 6;
-  el.setAttribute("aria-label", text);
-  el.innerHTML = chars.map((ch) => `<span class="shimmer-ch" aria-hidden="true">${ch}</span>`).join("");
-  if (reduced) return;
-  const spans = [...el.children], span = chars.length + 2 * HEAD.length;
-  let tick = 0;
-  setInterval(() => {
-    const head = (tick++ % (span + PAUSE)) - HEAD.length;
-    spans.forEach((s, i) => { const d = Math.abs(i - head); s.style.opacity = d < HEAD.length ? HEAD[d] : BASE; });
-  }, 120);
-}
-
-/* ---------- Model picker (src/AgentAttribution.tsx + src/ModelSelector.tsx) ----------
-   Preview the selected model immediately; following the agent restores its current model. */
-function modelPicker() {
-  const root = document.querySelector(".app-window");
-  if (!root) return;
-  const trigger = root.querySelector(".agent-attribution"), pop = root.querySelector(".model-popover");
-  const selector = pop.querySelector(".model-selector"), sw = pop.querySelector(".model-current-switch");
-  const label = trigger.querySelector("span"), mark = trigger.querySelector(".mark");
-  const options = [...pop.querySelectorAll(".model-option")];
-  const currentModel = label.textContent.trim();
-  let preferred = null;
-  const check = '<svg width="14" height="14" aria-hidden="true"><use href="#i-check"/></svg>';
-  function render() {
-    const value = preferred ?? currentModel;
-    for (const o of options) {
-      const on = o.textContent.trim() === value;
-      o.setAttribute("aria-pressed", String(on));
-      o.querySelector("svg")?.remove();
-      if (on) o.insertAdjacentHTML("beforeend", check);
-    }
-    selector.dataset.followCurrent = String(!preferred);
-    sw.setAttribute("aria-checked", String(!preferred));
-    label.textContent = value;
-    trigger.setAttribute("aria-label", `${value}; choose model`);
-    const selected = options.find((o) => o.textContent.trim() === value);
-    const openai = selected.closest(".model-provider").getAttribute("aria-label") === "ChatGPT";
-    mark.classList.toggle("openai", openai);
-    mark.querySelector("use").setAttribute("href", openai ? "#mark-openai" : "#mark-claude");
+/* ---------- Agent conversation: real collection, illustrative answer, one reveal ---------- */
+function agentStory() {
+  const root = document.querySelector(".agent-story"), D = window.INVECTUS_MAP;
+  if (!root || !D) return;
+  const gap = D.gaps[0], region = D.regions.find((r) => r.id === gap.a);
+  if (!region) return;
+  const canvas = root.querySelector(".story-map"), g = canvas.getContext("2d");
+  const papers = root.querySelector(".story-papers"), providers = [...root.querySelectorAll("[data-provider]")];
+  let highlighted = true, revealTimer, animations = [], size = 0;
+  // The source contains titles and region membership; no fabricated citations.
+  for (const p of D.points.filter((p) => p[2] === gap.a && p[3] === "d").slice(0, 2)) {
+    const li = document.createElement("li"), link = document.createElement("a");
+    link.textContent = D.titles[p[5]];
+    link.href = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(link.textContent)}`;
+    link.target = "_blank"; link.rel = "noopener";
+    li.appendChild(link); papers.appendChild(li);
   }
-  options.forEach((o) => o.addEventListener("click", () => {
-    preferred = o.textContent.trim(); render(); setOpen(false); trigger.focus();
+  function draw() {
+    if (!size) return;
+    const c = size / 2, radius = Math.max(0, c - 8), k = size / (region.radius * 5);
+    g.clearRect(0, 0, size, size);
+    g.save(); g.beginPath(); g.arc(c, c, radius, 0, Math.PI * 2); g.clip();
+    for (const [x, y, fine] of D.points) {
+      const sx = c + (x - region.x) * k, sy = c + (y - region.y) * k;
+      const on = highlighted && fine === region.id;
+      g.fillStyle = on ? "#6edcaa" : "rgba(209,203,194,0.28)";
+      g.fillRect(sx - 1.5, sy - 1.5, 3, 3);
+    }
+    if (highlighted) {
+      g.strokeStyle = "#6edcaa"; g.lineWidth = 1;
+      g.beginPath(); g.arc(c, c, region.radius * k, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = "#6edcaa"; g.font = LABEL_FONT;
+      g.fillText("G-01", c + region.radius * k + 8, c + 3);
+    }
+    g.restore(); g.strokeStyle = "rgba(209,203,194,0.35)"; g.lineWidth = 1;
+    g.beginPath(); g.arc(c, c, radius, 0, Math.PI * 2); g.stroke();
+  }
+  function resize() {
+    size = canvas.getBoundingClientRect().width;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
+  }
+  function play() {
+    clearTimeout(revealTimer);
+    animations.forEach((a) => a.cancel()); animations = [];
+    highlighted = reduced; draw();
+    root.querySelector(".story-tool-label").textContent = reduced ? "Collection evidence retrieved" : "Reading your collection’s gap evidence";
+    if (reduced) return;
+    for (const [selector, delay] of [[".story-question", 0], [".story-tool", 500], [".story-answer", 1600], [".story-evidence", 2600]]) {
+      animations.push(root.querySelector(selector).animate(
+        [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }],
+        { duration: 450, delay, easing: "ease-out", fill: "backwards" }
+      ));
+    }
+    revealTimer = setTimeout(() => {
+      highlighted = true; draw();
+      root.querySelector(".story-tool-label").textContent = "Collection evidence retrieved";
+    }, 1800);
+  }
+  providers.forEach((button) => button.addEventListener("click", () => {
+    const claude = button.dataset.provider === "claude";
+    providers.forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
+    root.querySelector(".story-assistant-name").textContent = claude ? "Claude" : "ChatGPT";
+    root.querySelector(".story-assistant-mark use").setAttribute("href", claude ? "#mark-claude" : "#mark-openai");
   }));
-  sw.addEventListener("click", () => { preferred = preferred ? null : currentModel; render(); });
-  pop.querySelectorAll(".model-provider-heading").forEach((h) => h.addEventListener("click", () => {
-    const open = h.getAttribute("aria-expanded") !== "true";
-    h.setAttribute("aria-expanded", String(open)); h.nextElementSibling.hidden = !open;
-  }));
-  const setOpen = (open) => { pop.hidden = !open; trigger.setAttribute("aria-expanded", String(open)); };
-  trigger.addEventListener("click", () => setOpen(pop.hidden));
-  document.addEventListener("pointerdown", (e) => { if (!pop.hidden && !pop.contains(e.target) && !trigger.contains(e.target)) setOpen(false); });
-  pop.addEventListener("keydown", (e) => { if (e.key === "Escape") { setOpen(false); trigger.focus(); } });
-  render();
+  root.querySelector(".story-replay").addEventListener("click", play);
+  new ResizeObserver(resize).observe(canvas);
+  resize();
+  const observer = new IntersectionObserver((entries) => {
+    if (entries.some((e) => e.isIntersecting)) { observer.disconnect(); play(); }
+  }, { threshold: 0.25 });
+  observer.observe(root);
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
@@ -839,8 +856,7 @@ function reveals() {
 }
 
 heroMap();
-document.querySelectorAll(".shimmer").forEach(shimmer);
-modelPicker();
+agentStory();
 searchDemo();
 copyButtons();
 footerMark();
