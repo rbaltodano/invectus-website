@@ -640,61 +640,94 @@ function rimTrail() {
    mockup under its step. */
 const TL = [[1976,1],[1978,1],[1979,1],[1982,2],[1985,4],[1986,2],[1988,3],[1989,1],[1990,2],[1991,3],[1992,3],[1994,1],[1997,1],[1998,3],[1999,2],[2000,6],[2001,5],[2002,2],[2004,5],[2005,5],[2006,4],[2007,6],[2008,5],[2009,7],[2010,3],[2011,1],[2012,1],[2013,3],[2014,3],[2015,2],[2016,2],[2017,2],[2018,1],[2020,1],[2021,1],[2022,1],[2023,2],[2024,3],[2025,3],[2026,1]];
 function mockHTML(kind) {
-  const tabs = (on) => `<div class="m-tabs">${["Search", "Gaps", "Saved", "Collections"].map((t, i) => `<span class="${t === on ? "on" : ""}">0${i + 1} ${t}</span>`).join("")}</div>`;
-  const head = (on) => `<div class="m-head"><span class="m-dots"><i></i><i></i><i></i></span><span class="m-project">Ophthalmology Research</span></div>${tabs(on)}`;
-  if (kind === "import") return `${head("Collections")}
+  // Pieces of the app rebuilt 1:1 from its screens (src/screens: Import, Search, GapDetail, Saved).
+  const tabs = (on) => `<div class="m-tabs">${["Search", "Gaps", "Saved", "Collections"].map((t, i) => `<span class="${t === on ? "on" : ""}"><em>0${i + 1}</em> ${t}</span>`).join("")}</div>`;
+  const bar = `<div class="m-head"><span class="m-dots"><i></i><i></i><i></i></span><span class="m-app">inVectus</span></div>`;
+  const project = (on) => `${bar}<div class="m-project"><span class="m-back">← Back to projects</span><b>Ophthalmology Research</b></div>${tabs(on)}`;
+  if (kind === "import") return `${bar}
     <div class="m-body">
-      <div class="m-label">Import · papers-5k.csv</div>
-      <div class="m-map">
-        ${[["pmid", "ID"], ["title", "Title"], ["abstract", "Text"], ["pub_date", "Date"], ["pub_type", "Role"]].map(([c, f], i) => `<div class="m-row a" style="--i:${i}"><code>${c}</code><span class="m-arrow">→</span><span class="m-chip">${f}</span></div>`).join("")}
+      <div class="m-titlerow a" style="--i:0"><b>Add to Dataset</b><span class="m-label">into Ophthalmology Research</span></div>
+      <div class="m-steps a" style="--i:1">${["Source", "Columns", "Roles", "Preview", "Import"].map((t, i) => `<span class="${i === 0 ? "done" : i === 1 ? "on" : ""}">${i + 1} ${t}</span>`).join("")}</div>
+      <div class="m-panel m-row-file a" style="--i:2"><b>papers-5k.csv</b><span class="m-muted">CSV · into “papers”</span><span class="m-link">Change source</span></div>
+      <div class="m-panel a" style="--i:3">
+        <b class="m-h2">Which column holds what?</b>
+        <div class="m-muted m-small">Only Text is required. We guessed from the column names.</div>
+        <div class="m-mapping">
+          <span class="m-th">Field</span><span class="m-th">Column</span><span class="m-th">Sample from row 1</span>
+          ${[["Text", "abstract", "Efforts to reduce the progression of myopia in childhood are on the rise…", true], ["Title", "title", "Interventions to Reduce Myopia Progression in Children."], ["ID", "pmid", "28166436"], ["Date", "pub_date", "2017-03-01"], ["URL", "None", ""]].map(([f, c, smp, req], i) => `<b class="a" style="--i:${i + 4}">${f}${req ? '<span class="m-req"> *</span>' : ""}</b><span class="m-select a" style="--i:${i + 4}">${c}<i>▾</i></span><span class="m-muted m-clip a" style="--i:${i + 4}">${smp}</span>`).join("")}
+        </div>
+        <div class="m-muted m-small">All other columns are kept as metadata.</div>
       </div>
-      <div class="m-rule a" style="--i:5">Systematic Review, Meta-Analysis → <b>coverage</b> · Journal Article → <b>demand</b></div>
-      <div class="m-stats a" style="--i:6"><div><b>5,000</b><span>items</span></div><div><b>4,922</b><span>demand</span></div><div><b>66</b><span>coverage</span></div><div><b>12</b><span>neutral</span></div></div>
-      <div class="m-progress"><span class="m-bar"><i></i></span><span class="m-progress-text">Indexed · 6,366 vectors · bge-small</span></div>
     </div>`;
-  if (kind === "search") return `${head("Search")}
+  if (kind === "search") return `${project("Search")}
     <div class="m-body">
-      <div class="m-search"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Gut microbiome and uveitis flares</div>
-      <div class="m-verdict a" style="--i:0">Near · related work, not the same thing</div>
-      ${[[0.83, "Immunosuppression in the Management of Presumed Non-infective Uveitis", "2020"], [0.79, "Microbiome alterations in primary Sjögren's syndrome", "2025"], [0.78, "HLA-B27 positive idiopathic acute anterior uveitis: a unique manifestation of subclinical gut inflammation", "1990"]].map(([v, t, y], i) => `<div class="m-hit a" style="--i:${i + 1}"><span class="m-score${i === 0 ? " top" : ""}">${v.toFixed(2)}</span><span><span class="m-title">${t}</span><em>${y} · demand</em><span class="m-meter"><i style="--w:${((v - 0.5) / 0.5).toFixed(2)}"></i></span></span></div>`).join("")}
-      <div class="m-foot a" style="--i:4">Compared with all 6,366 vectors, exactly · in this collection only</div>
+      <div class="m-search a" style="--i:0"><span>Gut microbiome and uveitis flares</span><span class="m-scope">All items ▾</span></div>
+      <div class="m-verdict a" style="--i:1"><b>Related ideas</b><span>Related items exist in this collection; compare their approaches.</span></div>
+      <div class="m-label a" style="--i:2">Similarity rankings</div>
+      ${[[0.83, "Immunosuppression in the Management of Presumed Non-infective Uveitis; Are We Sure What We are Treating?", "2020"], [0.79, "Microbiome alterations in primary Sjögren's syndrome: Regional dysbiosis and microbiome-targeted therapeutic strategies.", "2025"], [0.78, "HLA-B27 positive idiopathic acute anterior uveitis: a unique manifestation of subclinical gut inflammation.", "1990"]].map(([v, t, y], i) => `<div class="m-hit a" style="--i:${i + 3}"><span class="m-score${i === 0 ? " top" : ""}">${v.toFixed(2)}</span><span><span class="m-title">${t}</span><em>Demand · ${y}</em></span></div>`).join("")}
     </div>`;
   if (kind === "gap") {
     const max = Math.max(...TL.map((t) => t[1]));
-    return `${head("Gaps")}
+    return `${project("Gaps")}
     <div class="m-body">
-      <div class="m-gaphead a" style="--i:0"><span class="m-code">G-01</span><span>neurons · cortex · colliculus</span><span class="m-tag">Coverage gap</span><span class="m-gscore">3.64</span></div>
-      <div class="m-stats a" style="--i:1"><div><b>105</b><span>demand</span></div><div><b>0</b><span>coverage</span></div><div><b>+32%</b><span>per year</span></div></div>
-      <div class="m-label a" style="--i:2">Score breakdown</div>
-      <div class="m-terms a" style="--i:3"><div><span>Demand per coverage item</span><span class="m-meter"><i style="--w:0.85"></i></span><b>+3.09</b></div><div><span>Momentum</span><span class="m-meter"><i style="--w:0.15"></i></span><b>+0.55</b></div></div>
-      <div class="m-label a" style="--i:4">Papers per year, 1976–2026</div>
+      <span class="m-back a" style="--i:0">← Back</span>
+      <div class="m-gaphead a" style="--i:1"><span>neurons · cortex · colliculus</span><span class="m-tag">Coverage gap</span><span class="m-gscore">3.64</span></div>
+      <div class="a" style="--i:2"><b class="m-h3">Why it’s flagged</b><div class="m-muted m-small">105 demand items and no coverage item reaches this region, activity +32%/yr.</div></div>
+      <div class="m-stats a" style="--i:3"><div><b>105</b><span>Demand</span></div><div><b>0</b><span>Coverage</span></div><div><b>+32%<small>/yr</small></b><span>Activity</span></div></div>
+      <div class="m-label m-split a" style="--i:4"><span>Score breakdown</span><span>3.64</span></div>
+      <div class="m-terms a" style="--i:5"><div><span>Demand per coverage item</span><span class="m-meter"><i style="--w:0.85"></i></span><b>+3.09</b></div><div><span>Momentum</span><span class="m-meter"><i style="--w:0.15"></i></span><b>+0.55</b></div></div>
+      <div class="m-h3 a" style="--i:6">Per year <span class="m-key"><i></i>Demand <i class="cov"></i>Coverage</span></div>
       <div class="m-years">${TL.map(([y, n], i) => `<i style="--h:${(n / max).toFixed(2)};--i:${i}" title="${y}: ${n}"></i>`).join("")}</div>
+      <b class="m-h3 a" style="--i:7">What would fill this gap?</b>
     </div>`;
   }
-  return `${head("Saved")}
+  return `${project("Saved")}
     <div class="m-body">
-      <div class="m-gaphead a" style="--i:0"><span class="m-code">G-01</span><span>neurons · cortex · colliculus</span><span class="m-bookmark">★ Saved</span></div>
-      <div class="m-label a" style="--i:1">Your decision</div>
-      <div class="m-verdicts">${[["Open", false], ["Confirmed gap", false], ["Already exists", false], ["Not viable", false], ["Selected to work on", true]].map(([t, on], i) => `<span class="a${on ? " on" : ""}" style="--i:${i + 2}">${t}</span>`).join("")}</div>
-      <div class="m-note a" style="--i:7">Run a scoping search on superior colliculus and saccade work before committing.</div>
-      <div class="m-foot a" style="--i:8">Decided by you · kept when you rescan · illustrative note</div>
+      <div class="m-label m-split a" style="--i:0"><span>01 / Saved gaps</span><span class="m-plain">Selected first</span></div>
+      <div class="m-saved a" style="--i:1"><div class="m-split"><b>neurons · cortex · colliculus</b><b>3.64</b></div><div class="m-muted m-small">Coverage gap · Selected to work on · Saved Nov 8, 2026</div><div class="m-split m-small"><span class="m-link">Review evidence</span><span class="m-link">Remove bookmark</span></div></div>
+      <div class="m-label m-split a" style="--i:2"><span>02 / Decision log</span><span class="m-select">All decisions<i>▾</i></span></div>
+      <div class="m-muted m-small a" style="--i:3">Your latest decision for each gap. Selected opportunities appear first.</div>
+      <div class="m-saved a" style="--i:4"><div class="m-split m-small"><b>Selected to work on</b><span class="m-muted">Nov 8, 2026 at 9:41 AM</span></div><b class="m-big">neurons · cortex · colliculus</b><div class="m-small">Run a scoping search on superior colliculus and saccade work before committing.</div><span class="m-link m-small">Review evidence / edit decision</span></div>
     </div>`;
 }
 function featureStory() {
   const story = document.querySelector(".story");
   if (!story) return;
-  const kinds = ["import", "search", "gap", "decide"];
-  const stageMocks = [...story.querySelectorAll(".story-stage .mock")];
-  stageMocks.forEach((m) => { m.innerHTML = mockHTML(m.dataset.mock); });
+  const kinds = ["import", "search", "gap", "decide"], TAB = { search: "Search", gap: "Gaps", decide: "Saved" };
+  // Phones: one full mockup under each step.
   story.querySelectorAll(".step-mock").forEach((m, i) => { m.innerHTML = mockHTML(kinds[i]); m.classList.add("on"); });
+  // Desktop: one window that morphs between steps. The title bar stays; the project header and
+  // tabs fold away for the import screen; the active tab's underline slides; the body crossfades
+  // while the window's height eases to the new content.
+  const win = story.querySelector(".mock.morph");
+  const bodies = kinds.map((k) => { const t = document.createElement("div"); t.innerHTML = mockHTML(k); return t.querySelector(".m-body"); });
+  const tmp = document.createElement("div"); tmp.innerHTML = mockHTML("search");
+  win.innerHTML = `${tmp.querySelector(".m-head").outerHTML}
+    <div class="m-chrome"><div>${tmp.querySelector(".m-project").outerHTML}${tmp.querySelector(".m-tabs").outerHTML}</div></div>
+    <div class="m-pages"></div>`;
+  const pages = win.querySelector(".m-pages"), chrome = win.querySelector(".m-chrome"), tabs = win.querySelector(".m-tabs");
+  bodies.forEach((b) => { const page = document.createElement("div"); page.className = "m-page"; page.appendChild(b); pages.appendChild(page); });
+  const pageEls = [...pages.children];
+  const ink = document.createElement("span"); ink.className = "m-ink"; tabs.appendChild(ink);
+  const tabEls = [...tabs.querySelectorAll("span:not(.m-ink)")];
+  tabEls.forEach((t) => t.classList.remove("on"));
   const steps = [...story.querySelectorAll(".story-step")], list = story.querySelector(".story-steps");
   let current = -1;
+  function morph(i) {
+    const kind = kinds[i];
+    pageEls.forEach((p, k) => p.classList.toggle("on", k === i));
+    chrome.classList.toggle("folded", kind === "import");
+    const tab = tabEls.find((t) => t.textContent.trim().endsWith(TAB[kind] ?? "—"));
+    tabEls.forEach((t) => t.classList.toggle("on", t === tab));
+    if (tab) { ink.style.opacity = "1"; ink.style.transform = `translateX(${tab.offsetLeft}px)`; ink.style.width = `${tab.offsetWidth}px`; } else ink.style.opacity = "0";
+    pages.style.height = `${pageEls[i].offsetHeight}px`;
+  }
   const set = (i) => {
     if (i === current) return;
     current = i;
     steps.forEach((st, k) => st.classList.toggle("on", k === i));
-    stageMocks.forEach((m, k) => m.classList.toggle("on", k === i));
     list.style.setProperty("--progress", ((i + 1) / steps.length).toFixed(3));
+    morph(i);
   };
   const io = new IntersectionObserver((entries) => {
     for (const e of entries) if (e.isIntersecting) set(+e.target.dataset.i);
@@ -702,8 +735,8 @@ function featureStory() {
   steps.forEach((st) => io.observe(st));
   set(0);
   const stage = story.querySelector(".story-stage");
-  const centre = () => stage.style.setProperty("--stage-top", `${Math.max(24, (innerHeight - stage.offsetHeight) / 2)}px`);
-  addEventListener("resize", centre); centre();
+  const centre = () => { if (current >= 0) morph(current); stage.style.setProperty("--stage-top", `${Math.max(24, (innerHeight - stage.offsetHeight) / 2)}px`); };
+  addEventListener("resize", centre); (document.fonts?.ready ?? Promise.resolve()).then(centre); centre();
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
