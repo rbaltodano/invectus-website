@@ -338,3 +338,17 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .c-chip { font-family: var(--sans); font-size: 12px; letter-spacing: 0; }
 .c-chip b { font-family: var(--sans); }
 .c-think .c-avatar { margin-top: -6px; }
+
+/* Closing section: Earth from orbit in the lower left. Screen blending drops the image's black
+   sky into the page charcoal and keeps the atmosphere's glow and the city lights. */
+.get { overflow: hidden; min-height: 760px; display: flex; align-items: center; }
+.get .get-center { position: relative; z-index: 1; width: 100%; }
+.get-earth { position: absolute; z-index: 0; left: 0; bottom: 0; width: max(1100px, 100%); height: auto; max-width: none;
+  transform: translateY(46%); mix-blend-mode: screen; pointer-events: none; user-select: none;
+  /* Fade out to the right and into the footer at the bottom, so there is no hard edge. */
+  -webkit-mask-image: linear-gradient(to right, #000 75%, transparent), linear-gradient(to top, transparent 46%, #000 62%);
+  -webkit-mask-composite: source-in;
+  mask-image: linear-gradient(to right, #000 75%, transparent), linear-gradient(to top, transparent 46%, #000 62%);
+  mask-composite: intersect; }
+.get .get-center { padding-bottom: clamp(80px, 12vw, 180px); }
+@media (max-width: 760px) { .get { min-height: 760px; } .get-earth { width: 900px; transform: translateY(36%); } }
