@@ -389,3 +389,21 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .foot-meta::before { left: clamp(24px, 4vw, 64px); right: clamp(24px, 4vw, 64px); }
 .foot .foot-meta { padding-top: 20px; }
 .foot { padding-top: clamp(24px, 4vw, 64px); }
+
+/* Hero extras around the map (the map itself stays as in the app):
+   a faint light starfield outside the circle, the app's ranked gap list beside it, and the
+   circle's rim continuing into the dark section below. */
+.hero-stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.hero-gaps { list-style: none; margin: 28px 0 0; padding: 0; max-width: 420px; }
+.hero-gaps li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; cursor: pointer; transition: color 150ms ease; opacity: 0; animation: gap-slide-in 300ms ease-out forwards; animation-delay: calc(900ms + var(--i) * 70ms); }
+.hero-gaps li:last-child { border-bottom: 1px solid var(--line); }
+.hero-gaps .code { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--dim); }
+.hero-gaps .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink); }
+.hero-gaps .score { font-size: 15px; font-weight: 200; color: var(--dim); }
+.hero-gaps li:hover .code, .hero-gaps li:focus-visible .code, .hero-gaps li.on .code { color: var(--accent); }
+.hero-gaps li:hover .score, .hero-gaps li.on .score { color: var(--ink); }
+.hero-gaps li:focus-visible { outline: none; }
+@media (max-width: 1024px), (max-height: 860px) { .hero-gaps { display: none; } }
+.rim-trail { position: absolute; left: 0; top: 0; width: 100%; height: 150px; pointer-events: none; z-index: 0; }
+#features .wrap { position: relative; z-index: 1; }
+@media (prefers-reduced-motion: reduce) { .hero-gaps li { animation: none; opacity: 1; } }

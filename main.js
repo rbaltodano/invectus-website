@@ -141,7 +141,7 @@ function heroMap() {
       fit.k = (R * 1.72) / fit.extent;
     } else {
       // Keep the desktop copy clear of the bottom-right circle.
-      const box = [...hero.querySelectorAll(".hero-copy > *")].map((el) => el.getBoundingClientRect())
+      const box = [...hero.querySelectorAll(".hero-copy > *:not(.hero-gaps)")].map((el) => el.getBoundingClientRect())
         .reduce((a, b) => ({ right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) }), { right: 0, bottom: 0 });
       const clear = Math.hypot(Math.max(0, W - (box.right - rect.left)), Math.max(0, H - (box.bottom - rect.top))) - 28;
       R = Math.max(Math.hypot(W, H) * 0.3, Math.min(Math.hypot(W, H) * 0.56, clear));
@@ -154,6 +154,8 @@ function heroMap() {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
     // Clip the hit area as well as the drawing: only circle-origin gestures belong to the map.
     canvas.style.clipPath = `circle(${R}px at ${C.x}px ${C.y}px)`;
+    // Share the circle with the starfield and the rim trail below the hero.
+    dispatchEvent(new CustomEvent("herocircle", { detail: { C: { ...C }, R, W, H } }));
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     rebuild();
     if (pinned) placeCard();
@@ -354,6 +356,7 @@ function heroMap() {
   }
   function pin(next) {
     pinned = next; hover = undefined;
+    hero.querySelectorAll(".hero-gaps li").forEach((li) => li.classList.toggle("on", !!next?.gap && gaps[+li.dataset.i] === next.gap));
     if (!pinned) { tip.hidden = true; tip.classList.remove("pinned"); syncFlicker(); draw(); return; }
     tip.innerHTML = cardHTML(); tip.classList.add("pinned"); tip.hidden = false;
     tip.querySelector(".tip-close").addEventListener("click", () => pin(undefined));
@@ -380,6 +383,18 @@ function heroMap() {
     focusArea(gp.area, () => { if (!introOver) { introOver = true; if (W >= 760) pin({ gap: gp }); } });
   }
   const endIntro = () => { introOver = true; clearTimeout(introTimer); };
+
+  // The app's ranked gap list beside the map: hover a row to light its ring, click to open it.
+  const list = hero.querySelector(".hero-gaps");
+  if (list) {
+    list.innerHTML = gaps.slice(0, 5).map((gp, i) => `<li tabindex="0" style="--i:${i}" data-i="${i}"><span class="code">${gp.code}</span><span class="label">${esc(gp.label)}</span><span class="score">${gp.score.toFixed(2)}</span></li>`).join("");
+    const row = (e) => e.target.closest("li");
+    list.addEventListener("pointerover", (e) => { const li = row(e); if (!li || pinned) return; hover = { gap: gaps[+li.dataset.i] }; draw(); });
+    list.addEventListener("pointerleave", () => { if (!pinned) { hover = undefined; draw(); } });
+    const open = (li) => { endIntro(); const gp = gaps[+li.dataset.i]; pin({ gap: gp }); focusArea(gp.area); list.querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); };
+    list.addEventListener("click", (e) => { const li = row(e); if (li) open(li); });
+    list.addEventListener("keydown", (e) => { const li = row(e); if (li && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(li); } });
+  }
   for (const type of ["pointerdown", "wheel", "keydown", "gesturestart"]) canvas.addEventListener(type, endIntro, { capture: true });
   hero.querySelectorAll(".map-controls button").forEach((b) => b.addEventListener("click", endIntro, { capture: true }));
 
@@ -592,6 +607,92 @@ function agentChat() {
     visible = entries.some((e) => e.isIntersecting);
     if (visible) start();
   }, { threshold: 0.3 }).observe(root);
+}
+
+/* ---------- Hero starfield: faint light squares outside the circle ----------
+   Three depths (size, opacity, scroll drift) like the stars at the bottom of the page; they
+   flicker in with the map and stay out of the circle, the copy and the gap list. */
+function heroStars() {
+  const hero = document.querySelector(".hero"), canvas = hero?.querySelector(".hero-stars");
+  if (!canvas) return;
+  const g = canvas.getContext("2d"), ink = getComputedStyle(hero).getPropertyValue("--ink-rgb").trim() || "27, 26, 24";
+  const DEPTHS = [{ size: 3, alpha: 0.32, drift: 0.05 }, { size: 2, alpha: 0.2, drift: 0.12 }, { size: 2, alpha: 0.11, drift: 0.2 }];
+  const parallax = !reduced && matchMedia("(pointer: fine) and (min-width: 1025px)").matches;
+  const flicker = {
+    starts: new Map(), until: 0,
+    sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 300 + Math.random() * 1400; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
+    opacity(k, now) { const t = this.starts.get(k); if (reduced || t === undefined || now >= t + 600) return 1; if (now < t) return 0; return [1, 0.2, 0.85, 0.35, 0.7, 0.5][Math.floor((now - t) / 600 * 6)]; },
+    pending(now) { return now < this.until; },
+  };
+  let stars = [], W = 0, H = 0, circle = null, frame, shift = 0, started = false;
+  function layout() {
+    if (!circle) return;
+    const r = hero.getBoundingClientRect(); W = r.width; H = r.height;
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const avoid = [".hero-copy > *", ".hero-note", ".nav", ".map-controls"].flatMap((sel) => [...document.querySelectorAll(sel)])
+      .map((el) => el.getBoundingClientRect()).filter((b) => b.width).map((b) => ({ l: b.left - r.left - 28, t: b.top - r.top - 16, rt: b.right - r.left + 28, b: b.bottom - r.top + 16 }));
+    let seed = 7321;
+    const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
+    const count = Math.round((W * H) / 5200), MIN = 14;
+    stars = [];
+    for (let i = 0; i < count * 4 && stars.length < count; i++) {
+      const x = rand() * W, y = rand() * H;
+      if (Math.hypot(x - circle.C.x, y - circle.C.y) < circle.R + 18) continue;
+      if (avoid.some((b) => x > b.l && x < b.rt && y > b.t && y < b.b)) continue;
+      if (stars.some((o) => (o.x - x) ** 2 + (o.y - y) ** 2 < MIN * MIN)) continue;
+      const v = rand();
+      stars.push({ x, y, d: DEPTHS[v < 0.2 ? 0 : v < 0.55 ? 1 : 2], key: `h:${i}` });
+    }
+    if (!started) { started = true; flicker.sync(stars.map((s) => s.key), performance.now()); }
+    draw();
+  }
+  function draw() {
+    cancelAnimationFrame(frame);
+    const now = performance.now();
+    g.clearRect(0, 0, W, H);
+    for (const s of stars) {
+      g.globalAlpha = s.d.alpha * flicker.opacity(s.key, now);
+      g.fillStyle = `rgb(${ink})`;
+      const y = s.y + shift * s.d.drift;
+      g.fillRect(Math.round(s.x - s.d.size / 2), Math.round(y - s.d.size / 2), s.d.size, s.d.size);
+    }
+    g.globalAlpha = 1;
+    if (flicker.pending(now)) frame = requestAnimationFrame(draw);
+  }
+  addEventListener("herocircle", (e) => { circle = e.detail; layout(); });
+  if (parallax) {
+    let ticking = false;
+    addEventListener("scroll", () => {
+      if (ticking || scrollY > innerHeight * 1.2) return;
+      ticking = true; requestAnimationFrame(() => { ticking = false; shift = scrollY; draw(); });
+    }, { passive: true });
+  }
+}
+
+/* ---------- Rim trail: the hero circle's edge continues faintly into the dark section ---------- */
+function rimTrail() {
+  const hero = document.querySelector(".hero"), section = document.querySelector("#features"), canvas = section?.querySelector(".rim-trail");
+  if (!hero || !canvas) return;
+  const g = canvas.getContext("2d");
+  let circle = null;
+  function draw() {
+    if (!circle) return;
+    const hr = hero.getBoundingClientRect(), sr = section.getBoundingClientRect();
+    const W = sr.width, Hc = canvas.getBoundingClientRect().height, dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(Hc * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // The circle's centre in this section's coordinates (the hero sits directly above it).
+    const cx = hr.left - sr.left + circle.C.x, cy = hr.top - sr.top + circle.C.y;
+    const fade = g.createLinearGradient(0, 0, 0, Hc);
+    fade.addColorStop(0, "rgba(209, 203, 194, 0.3)");
+    fade.addColorStop(0.5, "rgba(209, 203, 194, 0.1)");
+    fade.addColorStop(1, "rgba(209, 203, 194, 0)");
+    g.clearRect(0, 0, W, Hc);
+    g.strokeStyle = fade; g.lineWidth = 1;
+    g.beginPath(); g.arc(cx, cy, circle.R - 1, 0, Math.PI * 2); g.stroke();
+  }
+  addEventListener("herocircle", (e) => { circle = e.detail; requestAnimationFrame(draw); });
+  new ResizeObserver(() => requestAnimationFrame(draw)).observe(section);
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
@@ -1086,6 +1187,8 @@ function reveals() {
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
 
+heroStars();
+rimTrail();
 heroMap();
 agentChat();
 searchDemo();

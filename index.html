@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=95ff179ff17a">
+  <link rel="stylesheet" href="styles.css?v=e499269626dc">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -34,6 +34,7 @@
 
   <main>
     <section class="hero light" aria-labelledby="hero-title">
+      <canvas class="hero-stars" aria-hidden="true"></canvas>
       <canvas class="hero-map" tabindex="0" role="img" aria-label="Map of 5,000 ophthalmology papers from PubMed; positions are for browsing only"></canvas>
       <div class="hero-tip" hidden></div>
       <div class="map-controls" role="group" aria-label="Map zoom">
@@ -56,11 +57,13 @@
           </a>
         </div>
         <p class="status done" aria-live="off"><span class="status-bar"><span></span></span><span class="status-text">Mapped</span></p>
+        <ol class="hero-gaps" aria-label="Top gaps in this collection"></ol>
       </div>
       <p class="hero-note">Real data: 5,000 PubMed ophthalmology papers, mapped by inVectus<br><span class="dim">Drag to pan · pinch or ⌘-scroll to zoom · click to open</span></p>
     </section>
 
     <section id="features" class="fold reveal" aria-labelledby="features-title">
+      <canvas class="rim-trail" aria-hidden="true"></canvas>
       <div class="wrap">
         <h2 id="features-title">One Workspace, from Import to Decision.</h2>
         <div class="feature-split">
@@ -180,7 +183,7 @@
 
   <script src="assets/ophthalmology-map.js" defer></script>
   <script src="assets/search-examples.js" defer></script>
-  <script src="main.js?v=b1e769c3fac8" defer></script>
+  <script src="main.js?v=c0706cab2c29" defer></script>
   <script src="lightbox.js" defer></script>
 </body>
 </html>
