@@ -994,7 +994,7 @@ function footerMark() {
   const g = canvas.getContext("2d");
   const ink = "#e9e4dc", accent = "#6edcaa", STEP = 6;
   const DEPTHS = [{ size: 3, alpha: 0.5 }, { size: 2, alpha: 0.3 }, { size: 2, alpha: 0.15 }];
-  const PULSE_MS = 1300, PULSE_R = 70, RING = 12;
+  const PULSE_MS = 2600, PULSE_R = 80, RING = 14;
   const flicker = {
     starts: new Map(), until: 0,
     sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 500 + Math.random() * 1600; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
@@ -1042,10 +1042,10 @@ function footerMark() {
       let boost = 0;
       for (const q of pulses) {
         const t = (now - q.t0) / PULSE_MS, dist = Math.hypot(p.x - q.x, p.y - q.y);
-        if (dist > PULSE_R + RING) continue;
+        if (t < 0 || dist > PULSE_R + RING) continue;
         const ease = 1 - (1 - t) ** 3, r = ease * PULSE_R;
         const ring = Math.max(0, 1 - Math.abs(dist - r) / RING) * (1 - t);
-        const core = dist < 10 ? Math.max(0, 1 - t * 3) : 0;
+        const core = dist < 10 ? Math.max(0, 1 - t * 2.5) : 0;
         boost = Math.max(boost, ring, core);
       }
       const o = shown ? flicker.opacity(p.key, now) : 0;
@@ -1059,10 +1059,14 @@ function footerMark() {
   // Every so often, while the footer is on screen, a pulse starts at a random point of the word.
   setInterval(() => {
     if (reduced || !shown || !visible || !dots.length || flicker.pending(performance.now())) return;
-    const p = dots[Math.floor(Math.random() * dots.length)];
-    pulses.push({ x: p.x, y: p.y, t0: performance.now() });
+    // One to three blips at a time, at random points, a little offset in time.
+    const n = 1 + Math.floor(Math.random() * 3), now = performance.now();
+    for (let i = 0; i < n; i++) {
+      const p = dots[Math.floor(Math.random() * dots.length)];
+      pulses.push({ x: p.x, y: p.y, t0: now + i * 180 + Math.random() * 300 });
+    }
     draw();
-  }, 650);
+  }, 900);
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
     if (visible && !shown) { shown = true; flicker.sync(dots.map((p) => p.key), performance.now()); draw(); }
