@@ -558,9 +558,10 @@ function agentChat() {
     let think, ticker;
     const say = (text) => {
       const line = think.querySelector(".c-think-text");
-      line.innerHTML = Array.from(text).map((ch) => `<span class="shimmer-ch">${esc(ch)}</span>`).join("");
+      // Letters sit inside per-word spans so long lines wrap between words on small screens.
+      line.innerHTML = text.split(" ").map((word) => `<span class="tw">${Array.from(word).map((ch) => `<span class="shimmer-ch">${esc(ch)}</span>`).join("")}</span>`).join(" ");
       line.setAttribute("aria-label", text);
-      const chars = [...line.children], span = chars.length + 4;
+      const chars = [...line.querySelectorAll(".shimmer-ch")], span = chars.length + 4;
       let tick = 0;
       clearInterval(ticker);
       ticker = setInterval(() => {
