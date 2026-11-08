@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=1277385362a0">
+  <link rel="stylesheet" href="styles.css?v=f8967d7b29c5">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -66,36 +66,36 @@
       <div class="wrap">
         <h2 id="features-title">One Workspace, from Import to Decision.</h2>
         <div class="story">
-          <figure class="story-stage" aria-label="The inVectus app at each step">
-            <img class="mac-shot on" src="assets/shot-ophthalmology-collections.png" alt="The Collections screen: 5,000 PubMed papers, their roles and calibration." data-caption="The Collections screen: 5,000 PubMed papers, their roles and calibration." data-i="0" width="1800" height="1170" loading="eager">
-            <img class="mac-shot" src="assets/shot-ophthalmology-search.png" alt="Search: the nearest papers to an idea, with similarity scores." data-caption="Search: the nearest papers to an idea, with similarity scores." data-i="1" width="1800" height="1143" loading="lazy">
-            <img class="mac-shot" src="assets/shot-ophthalmology-gap.png" alt="A coverage gap with its evidence and score breakdown. Gap scores are candidates for review, not validated discoveries." data-caption="A coverage gap with its evidence and score breakdown. Gap scores are candidates for review, not validated discoveries." data-i="2" width="1800" height="1170" loading="lazy">
-            <img class="flat" src="assets/shot-saved.png" alt="Saved gaps and a decision log, shown on the fictional Urban Futures demo collection." data-caption="Saved gaps and a decision log, shown on the fictional Urban Futures demo collection." data-i="3" width="1800" height="1130" loading="lazy">
-          </figure>
+          <div class="story-stage" aria-hidden="true">
+            <div class="mock on" data-mock="import"></div>
+            <div class="mock" data-mock="search"></div>
+            <div class="mock" data-mock="gap"></div>
+            <div class="mock" data-mock="decide"></div>
+          </div>
           <ol class="story-steps">
           <li class="story-step on" data-i="0">
             <span class="code">01</span>
             <h3>Bring Your Own Collection</h3>
             <p>Import CSV/TSV, Parquet, or folders of text and Markdown. Map columns and mark items as demand, coverage or neutral.</p>
-            <img class="step-shot mac-shot" src="assets/shot-ophthalmology-collections.png" alt="The Collections screen: 5,000 PubMed papers, their roles and calibration." data-caption="The Collections screen: 5,000 PubMed papers, their roles and calibration." width="1800" height="1170" loading="lazy">
+            <div class="mock step-mock"></div>
           </li>
           <li class="story-step" data-i="1">
             <span class="code">02</span>
             <h3>Search by Meaning</h3>
             <p>Compare an idea with your collection, inspect the nearest items, and read an experimental calibrated <em>exists / near / open</em> assessment.</p>
-            <img class="step-shot mac-shot" src="assets/shot-ophthalmology-search.png" alt="Search: the nearest papers to an idea, with similarity scores." data-caption="Search: the nearest papers to an idea, with similarity scores." width="1800" height="1143" loading="lazy">
+            <div class="mock step-mock"></div>
           </li>
           <li class="story-step" data-i="2">
             <span class="code">03</span>
             <h3>Explore Potential Gaps</h3>
             <p>Browse coverage gaps, stale coverage and bridges between related regions, each with its evidence and a score breakdown.</p>
-            <img class="step-shot mac-shot" src="assets/shot-ophthalmology-gap.png" alt="A coverage gap with its evidence and score breakdown. Gap scores are candidates for review, not validated discoveries." data-caption="A coverage gap with its evidence and score breakdown. Gap scores are candidates for review, not validated discoveries." width="1800" height="1170" loading="lazy">
+            <div class="mock step-mock"></div>
           </li>
           <li class="story-step" data-i="3">
             <span class="code">04</span>
             <h3>Keep Your Decisions</h3>
             <p>Bookmark gaps, record notes and verdicts, and return to saved work after rescanning.</p>
-            <img class="step-shot flat" src="assets/shot-saved.png" alt="Saved gaps and a decision log, shown on the fictional Urban Futures demo collection." data-caption="Saved gaps and a decision log, shown on the fictional Urban Futures demo collection." width="1800" height="1130" loading="lazy">
+            <div class="mock step-mock"></div>
           </li>
           </ol>
         </div>
@@ -205,7 +205,7 @@
 
   <script src="assets/ophthalmology-map.js" defer></script>
   <script src="assets/search-examples.js" defer></script>
-  <script src="main.js?v=99c11c78f1ad" defer></script>
+  <script src="main.js?v=841382c783c2" defer></script>
   <script src="lightbox.js" defer></script>
 </body>
 </html>

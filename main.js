@@ -634,15 +634,66 @@ function rimTrail() {
   new ResizeObserver(() => requestAnimationFrame(draw)).observe(section);
 }
 
-/* ---------- Features story: crossfade the pinned app window as each step reaches the middle ---------- */
+/* ---------- Features story: app-style mockups that switch as each step reaches the middle ----------
+   Each mockup rebuilds one piece of the app in HTML with real Ophthalmology Research numbers
+   (the decision note is illustrative). Desktop pins one stage beside the steps; phones show each
+   mockup under its step. */
+const TL = [[1976,1],[1978,1],[1979,1],[1982,2],[1985,4],[1986,2],[1988,3],[1989,1],[1990,2],[1991,3],[1992,3],[1994,1],[1997,1],[1998,3],[1999,2],[2000,6],[2001,5],[2002,2],[2004,5],[2005,5],[2006,4],[2007,6],[2008,5],[2009,7],[2010,3],[2011,1],[2012,1],[2013,3],[2014,3],[2015,2],[2016,2],[2017,2],[2018,1],[2020,1],[2021,1],[2022,1],[2023,2],[2024,3],[2025,3],[2026,1]];
+function mockHTML(kind) {
+  const tabs = (on) => `<div class="m-tabs">${["Search", "Gaps", "Saved", "Collections"].map((t, i) => `<span class="${t === on ? "on" : ""}">0${i + 1} ${t}</span>`).join("")}</div>`;
+  const head = (on) => `<div class="m-head"><span class="m-dots"><i></i><i></i><i></i></span><span class="m-project">Ophthalmology Research</span></div>${tabs(on)}`;
+  if (kind === "import") return `${head("Collections")}
+    <div class="m-body">
+      <div class="m-label">Import · papers-5k.csv</div>
+      <div class="m-map">
+        ${[["pmid", "ID"], ["title", "Title"], ["abstract", "Text"], ["pub_date", "Date"], ["pub_type", "Role"]].map(([c, f], i) => `<div class="m-row a" style="--i:${i}"><code>${c}</code><span class="m-arrow">→</span><span class="m-chip">${f}</span></div>`).join("")}
+      </div>
+      <div class="m-rule a" style="--i:5">Systematic Review, Meta-Analysis → <b>coverage</b> · Journal Article → <b>demand</b></div>
+      <div class="m-stats a" style="--i:6"><div><b>5,000</b><span>items</span></div><div><b>4,922</b><span>demand</span></div><div><b>66</b><span>coverage</span></div><div><b>12</b><span>neutral</span></div></div>
+      <div class="m-progress"><span class="m-bar"><i></i></span><span class="m-progress-text">Indexed · 6,366 vectors · bge-small</span></div>
+    </div>`;
+  if (kind === "search") return `${head("Search")}
+    <div class="m-body">
+      <div class="m-search"><svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="m20 20-3.5-3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>Gut microbiome and uveitis flares</div>
+      <div class="m-verdict a" style="--i:0">Near · related work, not the same thing</div>
+      ${[[0.83, "Immunosuppression in the Management of Presumed Non-infective Uveitis", "2020"], [0.79, "Microbiome alterations in primary Sjögren's syndrome", "2025"], [0.78, "HLA-B27 positive idiopathic acute anterior uveitis: a unique manifestation of subclinical gut inflammation", "1990"]].map(([v, t, y], i) => `<div class="m-hit a" style="--i:${i + 1}"><span class="m-score${i === 0 ? " top" : ""}">${v.toFixed(2)}</span><span><span class="m-title">${t}</span><em>${y} · demand</em><span class="m-meter"><i style="--w:${((v - 0.5) / 0.5).toFixed(2)}"></i></span></span></div>`).join("")}
+      <div class="m-foot a" style="--i:4">Compared with all 6,366 vectors, exactly · in this collection only</div>
+    </div>`;
+  if (kind === "gap") {
+    const max = Math.max(...TL.map((t) => t[1]));
+    return `${head("Gaps")}
+    <div class="m-body">
+      <div class="m-gaphead a" style="--i:0"><span class="m-code">G-01</span><span>neurons · cortex · colliculus</span><span class="m-tag">Coverage gap</span><span class="m-gscore">3.64</span></div>
+      <div class="m-stats a" style="--i:1"><div><b>105</b><span>demand</span></div><div><b>0</b><span>coverage</span></div><div><b>+32%</b><span>per year</span></div></div>
+      <div class="m-label a" style="--i:2">Score breakdown</div>
+      <div class="m-terms a" style="--i:3"><div><span>Demand per coverage item</span><span class="m-meter"><i style="--w:0.85"></i></span><b>+3.09</b></div><div><span>Momentum</span><span class="m-meter"><i style="--w:0.15"></i></span><b>+0.55</b></div></div>
+      <div class="m-label a" style="--i:4">Papers per year, 1976–2026</div>
+      <div class="m-years">${TL.map(([y, n], i) => `<i style="--h:${(n / max).toFixed(2)};--i:${i}" title="${y}: ${n}"></i>`).join("")}</div>
+    </div>`;
+  }
+  return `${head("Saved")}
+    <div class="m-body">
+      <div class="m-gaphead a" style="--i:0"><span class="m-code">G-01</span><span>neurons · cortex · colliculus</span><span class="m-bookmark">★ Saved</span></div>
+      <div class="m-label a" style="--i:1">Your decision</div>
+      <div class="m-verdicts">${[["Open", false], ["Confirmed gap", false], ["Already exists", false], ["Not viable", false], ["Selected to work on", true]].map(([t, on], i) => `<span class="a${on ? " on" : ""}" style="--i:${i + 2}">${t}</span>`).join("")}</div>
+      <div class="m-note a" style="--i:7">Run a scoping search on superior colliculus and saccade work before committing.</div>
+      <div class="m-foot a" style="--i:8">Decided by you · kept when you rescan · illustrative note</div>
+    </div>`;
+}
 function featureStory() {
   const story = document.querySelector(".story");
   if (!story) return;
-  const steps = [...story.querySelectorAll(".story-step")], shots = [...story.querySelectorAll(".story-stage img")];
-  const list = story.querySelector(".story-steps");
+  const kinds = ["import", "search", "gap", "decide"];
+  const stageMocks = [...story.querySelectorAll(".story-stage .mock")];
+  stageMocks.forEach((m) => { m.innerHTML = mockHTML(m.dataset.mock); });
+  story.querySelectorAll(".step-mock").forEach((m, i) => { m.innerHTML = mockHTML(kinds[i]); m.classList.add("on"); });
+  const steps = [...story.querySelectorAll(".story-step")], list = story.querySelector(".story-steps");
+  let current = -1;
   const set = (i) => {
+    if (i === current) return;
+    current = i;
     steps.forEach((st, k) => st.classList.toggle("on", k === i));
-    shots.forEach((im, k) => im.classList.toggle("on", k === i));
+    stageMocks.forEach((m, k) => m.classList.toggle("on", k === i));
     list.style.setProperty("--progress", ((i + 1) / steps.length).toFixed(3));
   };
   const io = new IntersectionObserver((entries) => {
@@ -650,7 +701,6 @@ function featureStory() {
   }, { rootMargin: "-45% 0px -45% 0px" });
   steps.forEach((st) => io.observe(st));
   set(0);
-  // Pin the window centred in the viewport.
   const stage = story.querySelector(".story-stage");
   const centre = () => stage.style.setProperty("--stage-top", `${Math.max(24, (innerHeight - stage.offsetHeight) / 2)}px`);
   addEventListener("resize", centre); centre();
@@ -990,23 +1040,46 @@ function getStars() {
     stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
     return best;
   }
-  // Selection: a star is shown (×, circle and card) only when clicked, never on hover; clicking
-  // it again clears it.
-  function select(star) {
+  // Selection: every 5 s a random star on screen is selected (× and circle, no card). Its card
+  // shows only while the pointer is over it. A clicked star shows its card and stays selected
+  // for 15 s or until it is clicked again; then the random selection resumes.
+  let userUntil = 0, nextAuto = 0, byUser = false;
+  function select(star, user = false) {
     const now = performance.now(), was = pinned;
-    pinned = star;
+    pinned = star; byUser = user;
     if (was && was !== star) { pins = pins.filter((pn) => pn.star !== was); pins.push({ star: was, t0: now, out: true }); }
     if (star && star !== was) pins.push({ star, t0: now, out: false });
     draw();
-    if (star) showTip(star); else tip.hidden = true;
+    if (star && user) showTip(star); else tip.hidden = true;
+  }
+  function onScreen(st) {
+    if (st.hidden) return false;
+    const r = canvas.getBoundingClientRect(), [x, y] = at(st), vy = y + r.top, ft = foot?.getBoundingClientRect().top ?? innerHeight;
+    return x > 40 && x < W - 300 && vy > 80 && vy < Math.min(innerHeight, ft) - 140;
   }
   section.addEventListener("click", (e) => {
     const i = starAt(e);
     if (i < 0) return;
-    select(stars[i] === pinned ? null : stars[i]);
+    const now = performance.now();
+    if (stars[i] === pinned && byUser) { select(null); userUntil = 0; nextAuto = now + 5000; return; }
+    select(stars[i], true); userUntil = now + 15000;
   });
-  // Hover only changes the cursor over a star.
-  section.addEventListener("pointermove", (e) => { section.style.cursor = starAt(e) >= 0 ? "pointer" : ""; });
+  setInterval(() => {
+    const now = performance.now();
+    if (!shown || !visible || document.hidden || flicker.pending(now)) return;
+    if (userUntil) { if (now < userUntil) return; userUntil = 0; nextAuto = 0; }
+    if (now < nextAuto) return;
+    const pool = stars.filter((st) => st !== pinned && onScreen(st));
+    if (pool.length) select(pool[Math.floor(Math.random() * pool.length)]);
+    nextAuto = now + 5000;
+  }, 250);
+  // Hover: pointer cursor over any star; the selected star's card shows while hovered.
+  section.addEventListener("pointermove", (e) => {
+    const i = starAt(e);
+    section.style.cursor = i >= 0 ? "pointer" : "";
+    if (!pinned || byUser) return;
+    if (i >= 0 && stars[i] === pinned) showTip(pinned); else tip.hidden = true;
+  });
 
   // Parallax (desktop): each star depth and the Earth drift at their own speed.
   let ticking = false;
@@ -1017,7 +1090,7 @@ function getStars() {
     offset = r.top - innerHeight / 2 + r.height / 2;
     earth?.style.setProperty("--earth-py", `${(-offset * 0.12).toFixed(1)}px`);
     hot = -1;
-    draw(); if (pinned) showTip(pinned); else tip.hidden = true;
+    draw(); if (pinned && byUser) showTip(pinned); else tip.hidden = true;
   }
   addEventListener("scroll", () => { if (!light && visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
   new IntersectionObserver((entries) => {
