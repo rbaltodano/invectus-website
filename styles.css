@@ -187,7 +187,8 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .get .term { margin-top: 0; }
 
 /* Footer: link columns over a giant wordmark drawn in the map's squares (main.js footerMark). */
-.foot { position: relative; z-index: 2; overflow: hidden; background: var(--bg); padding: clamp(64px, 9vw, 112px) 0 0; font-size: 13.5px; }
+/* Footer: a glass card inside the space background, like the install command box. */
+.foot { position: relative; z-index: 2; overflow: hidden; margin: 24px; border-radius: 48px; background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(80px); backdrop-filter: blur(80px); padding: clamp(48px, 7vw, 88px) 0 0; font-size: 13.5px; }
 .foot-top { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 48px; }
 .foot-brand img { display: block; height: 26px; width: auto; margin-bottom: 20px; }
 .foot-brand p { color: var(--dim); max-width: 34ch; }
@@ -341,17 +342,17 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 
 /* Closing section: Earth from orbit in the lower left. Screen blending drops the image's black
    sky into the page charcoal and keeps the atmosphere's glow and the city lights. */
-.get { overflow: hidden; min-height: 760px; display: flex; align-items: center; }
+.get { position: relative; z-index: 2; background: none; padding: clamp(72px, 11vw, 140px) 0 clamp(48px, 6vw, 80px); min-height: 680px; display: flex; align-items: center; }
 .get .get-center { position: relative; z-index: 1; width: 100%; }
-.get-earth { position: absolute; z-index: 0; left: 0; bottom: 0; width: max(1100px, 100%); height: auto; max-width: none;
-  transform: translateY(calc(46% + var(--earth-py, 0px))); mix-blend-mode: screen; pointer-events: none; user-select: none;
+.get-earth { position: absolute; z-index: 0; left: 0; top: var(--earth-top, 50%); width: max(1100px, 100%); height: auto; max-width: none;
+  transform: translateY(var(--earth-py, 0px)); mix-blend-mode: screen; pointer-events: none; user-select: none;
   /* Fade out to the right and into the footer at the bottom, so there is no hard edge. */
   -webkit-mask-image: linear-gradient(to right, #000 75%, transparent), linear-gradient(to top, transparent 46%, #000 62%);
   -webkit-mask-composite: source-in;
   mask-image: linear-gradient(to right, #000 75%, transparent), linear-gradient(to top, transparent 46%, #000 62%);
   mask-composite: intersect; }
 .get .get-center { padding-bottom: clamp(80px, 12vw, 180px); }
-@media (max-width: 760px) { .get { min-height: 760px; } .get-earth { width: 900px; transform: translateY(calc(36% + var(--earth-py, 0px))); } }
+@media (max-width: 760px) { .get { min-height: 0; } .get-earth { width: 900px; } }
 .get .install { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(80px); backdrop-filter: blur(80px); }
 .get .pill { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(80px); backdrop-filter: blur(80px); }
 .get .pill:hover, .get .pill:focus-visible { background: rgba(0, 0, 0, 0.45); border-color: rgba(255, 255, 255, 0.16); }
@@ -369,4 +370,5 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 }
 .get .get-center { z-index: 2; }
 /* Always fade the bottom of the section into the footer, wherever the parallax puts the Earth. */
-.get::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 140px; background: linear-gradient(to bottom, rgba(20, 20, 20, 0), var(--bg)); z-index: 1; pointer-events: none; }
+.space { position: relative; overflow: hidden; background: var(--bg); }
+@media (pointer: coarse), (max-width: 1024px) { .foot { -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); } }

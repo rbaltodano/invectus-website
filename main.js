@@ -762,10 +762,19 @@ function searchDemo() {
    (farther = slower relative to the page). They flicker in once, like the data circle's squares.
    Hover or tap a star to see its title, year and region. */
 function getStars() {
-  const section = document.querySelector(".get"), canvas = section?.querySelector(".get-stars"), D = window.INVECTUS_MAP;
-  if (!canvas || !D) return;
-  const tip = section.querySelector(".star-tip"), earth = section.querySelector(".get-earth");
-  const g = canvas.getContext("2d"), flicker = new DotFlicker();
+  // The stars and Earth fill the shared space behind the closing section and the footer.
+  const section = document.querySelector(".space"), cta = document.querySelector(".get"), canvas = section?.querySelector(".get-stars"), D = window.INVECTUS_MAP;
+  if (!canvas || !D || !cta) return;
+  const tip = section.querySelector(".star-tip"), earth = section.querySelector(".get-earth"), foot = section.querySelector(".foot");
+  const g = canvas.getContext("2d");
+  // Entrance: half a second after the section arrives, each star steps through the data
+  // circle's flicker levels, more slowly and spread over about two seconds.
+  const flicker = {
+    starts: new Map(), until: 0,
+    sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 500 + Math.random() * 1600; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
+    opacity(k, now) { const t = this.starts.get(k); if (reduced || t === undefined || now >= t + 600) return 1; if (now < t) return 0; return [1, 0.2, 0.85, 0.35, 0.7, 0.5][Math.floor((now - t) / 600 * 6)]; },
+    pending(now) { return now < this.until; },
+  };
   const regions = new Map(D.regions.map((r) => [r.id, r.label]));
   // Phones and tablets: no parallax (too heavy under the blurred glass); stars stay still.
   const light = reduced || matchMedia("(pointer: coarse), (max-width: 1024px)").matches;
@@ -786,6 +795,12 @@ function getStars() {
     if (!W || !H) return;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    // Put the Earth's horizon just above the footer card.
+    if (earth && foot) {
+      const eh = earth.getBoundingClientRect().height || earth.offsetWidth * 720 / 1680;
+      earth.style.setProperty("--earth-top", `${foot.offsetTop - eh * 0.193 - (W < 760 ? 40 : 90)}px`);
+    }
+    const fr = foot?.getBoundingClientRect(), footTop = fr ? fr.top - r.top : Infinity;
     const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());
     const copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
     let seed = 9071;
@@ -797,6 +812,7 @@ function getStars() {
       // Near stars keep clear of the copy; faint far ones may sit closer to it.
       const pad = depth === DEPTHS[0] ? 24 : 8;
       if (x > copy.l - pad && x < copy.rt + pad && y > copy.t - pad && y < copy.b + pad) continue;
+      if (y > footTop - 12) continue; // none behind the footer card
       const p = D.points[Math.floor(rand() * D.points.length)];
       stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p, key: `s:${i}` });
     }
@@ -842,7 +858,7 @@ function getStars() {
   function parallax() {
     ticking = false;
     if (light) return;
-    const r = section.getBoundingClientRect();
+    const r = cta.getBoundingClientRect();
     offset = r.top - innerHeight / 2 + r.height / 2;
     earth?.style.setProperty("--earth-py", `${(-offset * 0.12).toFixed(1)}px`);
     if (!tip.hidden) { tip.hidden = true; hot = -1; }
@@ -853,7 +869,7 @@ function getStars() {
     visible = entries.some((e) => e.isIntersecting);
     if (visible && !shown) { shown = true; flicker.sync(stars.map((st) => st.key), performance.now()); }
     if (visible) parallax(), draw();
-  }, { threshold: 0 }).observe(section);
+  }, { threshold: 0.25 }).observe(cta);
   let rt;
   new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(layout, 100); }).observe(section);
   (document.fonts?.ready ?? Promise.resolve()).then(layout);
