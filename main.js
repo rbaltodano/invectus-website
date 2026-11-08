@@ -517,29 +517,35 @@ function agentChat() {
       text: "<b>Near, not the same.</b> Related work is here, but nothing on that exact question. It sits between the HLA-B27 uveitis papers and the experimental autoimmune uveitis work.",
       cite: "Nearest: <b>Immunosuppression in the management of presumed non-infective uveitis</b> (2020, 0.83) · <b>HLA-B27 positive acute anterior uveitis: a manifestation of subclinical gut inflammation</b> (1990, 0.78)" },
   ];
-  let timers = [];
-  const later = (ms, fn) => timers.push(setTimeout(fn, reduced ? 0 : ms));
+  // One exchange at a time: question, typing, answer; hold; both fade out; the next exchange.
+  const EXCHANGES = [[STEPS[0], STEPS[1]], [STEPS[2], STEPS[3]]];
+  let timers = [], index = 0, visible = false, running = false;
+  const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
   const pulse = (dir) => { if (!wire || reduced) return; wire.classList.remove("out", "back"); void wire.offsetWidth; wire.classList.add(dir); };
-  function play() {
-    timers.forEach(clearTimeout); timers = []; log.innerHTML = "";
-    let t = 0;
-    for (const step of STEPS) {
-      if (step.user) { later(t, () => add("c-user", esc(step.user))); t += 900; continue; }
-      let typing;
-      later(t, () => { typing = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><span class="c-bubble c-typing" aria-label="${step.name} is answering"><i></i><i></i><i></i></span>`); pulse("out"); });
-      later(t + 1300, () => {
-        typing?.remove();
-        const li = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><div class="c-bubble"><span class="c-name">${step.name}</span><p>${step.text}</p><span class="c-cite">${step.cite}</span></div>`);
-        li.insertAdjacentHTML("afterend", `<li class="c-chip">via inVectus · <b>${step.tool}</b></li>`);
-        pulse("back");
-      });
-      t += 2600;
-    }
+  const answer = (step) => {
+    const li = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><div class="c-bubble"><span class="c-name">${step.name}</span><p>${step.text}</p><span class="c-cite">${step.cite}</span></div>`);
+    li.insertAdjacentHTML("afterend", `<li class="c-chip">via inVectus · <b>${step.tool}</b></li>`);
+  };
+  function exchange() {
+    const [q, a] = EXCHANGES[index];
+    log.classList.remove("leaving"); log.innerHTML = "";
+    if (reduced) { add("c-user", esc(q.user)); answer(a); return; }
+    add("c-user", esc(q.user));
+    let typing;
+    later(800, () => { typing = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${a.mark}"/></svg></span><span class="c-bubble c-typing" aria-label="${a.name} is answering"><i></i><i></i><i></i></span>`); pulse("out"); });
+    later(2200, () => { typing?.remove(); answer(a); pulse("back"); });
+    later(8200, () => log.classList.add("leaving"));
+    later(8700, () => {
+      index = (index + 1) % EXCHANGES.length;
+      if (visible) exchange(); else running = false;
+    });
   }
-  root.querySelector(".chat-replay").addEventListener("click", play);
-  const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); play(); } }, { threshold: 0.3 });
-  io.observe(root);
+  function start() { if (running) return; running = true; timers.forEach(clearTimeout); timers = []; exchange(); }
+  new IntersectionObserver((entries) => {
+    visible = entries.some((e) => e.isIntersecting);
+    if (visible) start();
+  }, { threshold: 0.3 }).observe(root);
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
