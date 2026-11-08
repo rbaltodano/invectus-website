@@ -321,3 +321,17 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .chat-log.leaving { opacity: 0; transform: translateY(-8px); }
 .c-think { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
 .c-think-text .shimmer-ch { white-space: pre; opacity: 0.35; }
+
+/* Assistant replies are plain text beside the avatar (no bubble), all in the sans; words fade in one by one. */
+.c-bot { align-items: flex-start; max-width: 92%; }
+.c-bot .c-avatar { margin-top: 2px; }
+.c-reply { font-size: 15px; line-height: 1.65; color: var(--ink); }
+.c-reply p { margin: 0; max-width: none; }
+.c-reply .c-name { display: block; margin-bottom: 2px; font-size: 12.5px; color: var(--dim); }
+.c-reply .c-cite { display: block; margin-top: 10px; font-size: 13px; color: var(--dim); }
+.c-reply .c-cite b { color: var(--ink); font-weight: 400; }
+.c-reply .w { display: inline; opacity: 0; animation: word-in 420ms ease-out forwards; animation-delay: calc(var(--i) * 28ms); }
+@keyframes word-in { from { opacity: 0; filter: blur(3px); } to { opacity: 1; filter: none; } }
+.c-think { font-family: var(--sans); font-size: 14px; color: var(--ink); }
+.c-chip { font-family: var(--sans); font-size: 12px; letter-spacing: 0; }
+.c-chip b { font-family: var(--sans); }

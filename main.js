@@ -525,9 +525,29 @@ function agentChat() {
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
   const pulse = (dir) => { if (!wire || reduced) return; wire.classList.remove("out", "back"); void wire.offsetWidth; wire.classList.add(dir); };
+  // Wrap every word in a span so the answer fades in word by word (tags like <b> are kept).
+  function wordify(el) {
+    let i = 0;
+    const walk = (node) => {
+      for (const child of [...node.childNodes]) {
+        if (child.nodeType === 3) {
+          const frag = document.createDocumentFragment();
+          for (const part of child.textContent.split(/(\s+)/)) {
+            if (!part) continue;
+            if (/^\s+$/.test(part)) { frag.appendChild(document.createTextNode(part)); continue; }
+            const w = document.createElement("span"); w.className = "w"; w.style.setProperty("--i", i++); w.textContent = part; frag.appendChild(w);
+          }
+          child.replaceWith(frag);
+        } else walk(child);
+      }
+    };
+    walk(el);
+  }
   const answer = (step) => {
-    const li = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><div class="c-bubble"><span class="c-name">${step.name}</span><p>${step.text}</p><span class="c-cite">${step.cite}</span></div>`);
-    li.insertAdjacentHTML("afterend", `<li class="c-chip">via inVectus · <b>${step.tool}</b></li>`);
+    const li = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${step.mark}"/></svg></span><div class="c-reply"><span class="c-name">${step.name}</span><p>${step.text}</p><span class="c-cite">${step.cite}</span></div>`);
+    if (!reduced) wordify(li.querySelector(".c-reply"));
+    const words = li.querySelectorAll(".w").length;
+    li.insertAdjacentHTML("afterend", `<li class="c-chip" style="animation-delay:${words * 28 + 200}ms">via inVectus · <b>${step.tool}</b></li>`);
   };
   function exchange() {
     const [q, a] = EXCHANGES[index];
