@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="assets/favicon-32.png" sizes="32x32">
   <link rel="preload" href="assets/fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="assets/fonts/martian-mono-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="styles.css?v=edec1e2e957a">
+  <link rel="stylesheet" href="styles.css?v=010b4ec96426">
 </head>
 <body>
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
@@ -101,50 +101,30 @@
       <div class="wrap">
         <div class="agents-intro">
           <h2 id="agents-title">Bring Claude or ChatGPT.</h2>
-          <p>Ask questions about your collection in the agent you already use. inVectus brings the search, the map and the evidence.</p>
+          <p>Your agent calls inVectus tools on your computer, reads the evidence, and leaves the decision to you.</p>
         </div>
-        <figure class="agent-story" aria-label="Example conversation grounded in the Ophthalmology Research collection">
-          <div class="agent-conversation">
-            <div class="story-toolbar">
-              <div class="story-providers" role="group" aria-label="Example assistant">
-                <button type="button" data-provider="claude" aria-pressed="true"><svg width="16" height="16" aria-hidden="true"><use href="#mark-claude"/></svg>Claude</button>
-                <button type="button" data-provider="chatgpt" aria-pressed="false"><svg width="16" height="16" aria-hidden="true"><use href="#mark-openai"/></svg>ChatGPT</button>
-              </div>
-              <button type="button" class="story-replay" aria-label="Replay example conversation">Replay <span aria-hidden="true">↻</span></button>
+        <figure class="session" aria-label="Example agent session using inVectus tools on the Ophthalmology Research collection">
+          <div class="session-bar">
+            <div class="session-providers" role="group" aria-label="Agent">
+              <button type="button" data-provider="claude" aria-pressed="true"><svg width="15" height="15" aria-hidden="true"><use href="#mark-claude"/></svg>Claude Code</button>
+              <button type="button" data-provider="chatgpt" aria-pressed="false"><svg width="15" height="15" aria-hidden="true"><use href="#mark-openai"/></svg>Codex</button>
             </div>
-            <div class="story-thread">
-              <div class="story-question"><span class="story-speaker">You</span><p>Where is demand growing faster than coverage?</p></div>
-              <div class="story-tool"><span class="story-tool-dot" aria-hidden="true"></span><span class="story-tool-label">Collection evidence retrieved</span></div>
-              <div class="story-answer">
-                <div class="story-speaker"><svg class="story-assistant-mark" width="16" height="16" aria-hidden="true"><use href="#mark-claude"/></svg><span class="story-assistant-name">Claude</span></div>
-                <p>This region has 105 demand papers and no coverage reaching it. Activity is growing 32% a year. It’s a candidate for a scoping review, based on this collection.</p>
-              </div>
-              <div class="story-evidence"><span class="story-evidence-label">Supporting papers</span><ul class="story-papers"></ul></div>
-            </div>
+            <span class="session-model"></span>
+            <button type="button" class="session-replay" aria-label="Replay the session">Replay <span aria-hidden="true">↻</span></button>
           </div>
-          <div class="story-map-panel">
-            <div class="story-map-header"><span>Ophthalmology Research</span><span class="story-map-count">5,000 papers</span></div>
-            <canvas class="story-map" role="img" aria-label="Real collection points around the neurons, cortex and colliculus region, highlighted as a potential coverage gap"></canvas>
-            <div class="story-region"><span class="story-region-code">G-01 · Potential gap</span><span>neurons · cortex · colliculus</span><div class="story-metrics"><span><b>105</b> demand</span><span><b>0</b> coverage</span><span><b>+32%</b> / year</span></div></div>
-          </div>
-          <figcaption>Illustrative conversation using real collection evidence. Potential gaps need review; they do not establish global novelty.</figcaption>
+          <ol class="session-log" aria-live="polite"></ol>
         </figure>
-      </div>
-    </section>
-
-    <section id="connection" class="connection reveal" aria-labelledby="connection-title">
-      <div class="wrap">
-        <div class="connection-intro"><p class="eyebrow">How it connects</p><h2 id="connection-title">One Local Connection.</h2><p>Your agent asks. inVectus searches your collection and returns evidence through its MCP server.</p></div>
-        <figure class="mcp-diagram" aria-label="On your computer: your agent app connects over stdio to the inVectus MCP server, which reads your local collection and returns evidence">
-          <figcaption class="mcp-boundary-label">On your computer</figcaption>
-          <div class="mcp-flow">
-            <div class="mcp-node"><div class="mcp-provider-marks" aria-hidden="true"><svg width="22" height="22"><use href="#mark-claude"/></svg><svg width="22" height="22"><use href="#mark-openai"/></svg></div><strong>Your agent app</strong><span>Claude Code · Claude Desktop<br>Codex · Cursor</span></div>
-            <div class="mcp-link"><span>stdio</span><div class="mcp-wire" aria-hidden="true"></div><small>Requests ↔ evidence</small></div>
-            <div class="mcp-node mcp-engine"><span class="mcp-node-kicker">inVectus</span><strong>MCP server</strong><code>invectus mcp</code><span>Search · check ideas · list gaps</span></div>
-            <div class="mcp-link"><span>Local files</span><div class="mcp-wire" aria-hidden="true"></div><small>Read ↔ results</small></div>
-            <div class="mcp-node"><span class="mcp-node-kicker">Your collection</span><strong>Documents &amp; vectors</strong><span>Evidence, regions<br>and saved decisions</span></div>
+        <div class="wire" aria-hidden="true">
+          <span class="wire-label">On your computer</span>
+          <div class="wire-row">
+            <span class="wire-node"><svg width="16" height="16"><use href="#mark-claude"/></svg><svg class="openai" width="16" height="16"><use href="#mark-openai"/></svg>Your agent</span>
+            <span class="wire-line"><i></i></span>
+            <span class="wire-node"><code>invectus mcp</code></span>
+            <span class="wire-line"><i></i></span>
+            <span class="wire-node">Your files</span>
           </div>
-        </figure>
+        </div>
+        <p class="session-note">Illustrative session. The tool names are inVectus’s real MCP tools; the gaps, counts and papers are real results from the Ophthalmology Research collection.</p>
         <div class="connection-setup"><pre class="term"><span class="dim">$</span> invectus connect add claude-code
 <span class="dim">$</span> invectus connect add codex</pre><p class="dim">No listening network port. The agent client starts the local server. Your chosen agent may send prompts and tool results to its provider.</p></div>
         <dl class="figures" id="privacy" aria-label="Privacy">
@@ -154,7 +134,6 @@
         </dl>
       </div>
     </section>
-
 
     <section class="get light reveal" aria-labelledby="get-title">
       <div class="wrap get-center">
@@ -199,7 +178,7 @@
 
   <script src="assets/ophthalmology-map.js" defer></script>
   <script src="assets/search-examples.js" defer></script>
-  <script src="main.js?v=6b70a147a2ee" defer></script>
+  <script src="main.js?v=1c588f473d2f" defer></script>
   <script src="lightbox.js" defer></script>
 </body>
 </html>

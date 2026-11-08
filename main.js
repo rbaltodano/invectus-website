@@ -499,79 +499,65 @@ function heroMap() {
   introTimer = setTimeout(intro, reduced ? 300 : DOT_DELAY_MS + DOT_FLICKER_MS + 900);
 }
 
-/* ---------- Agent conversation: real collection, illustrative answer, one reveal ---------- */
-function agentStory() {
-  const root = document.querySelector(".agent-story"), D = window.INVECTUS_MAP;
+/* ---------- Agent session: real inVectus MCP tools, real results, illustrative wording ----------
+   The tool names are the MCP server's; the gaps, counts and papers come from the Ophthalmology
+   Research collection (gap scan and region map). The agent's sentences are written for the demo. */
+function agentSession() {
+  const root = document.querySelector(".session"), D = window.INVECTUS_MAP;
   if (!root || !D) return;
-  const gap = D.gaps[0], region = D.regions.find((r) => r.id === gap.a);
-  if (!region) return;
-  const canvas = root.querySelector(".story-map"), g = canvas.getContext("2d");
-  const papers = root.querySelector(".story-papers"), providers = [...root.querySelectorAll("[data-provider]")];
-  let highlighted = true, revealTimer, animations = [], size = 0;
-  // The source contains titles and region membership; no fabricated citations.
-  for (const p of D.points.filter((p) => p[2] === gap.a && p[3] === "d").slice(0, 2)) {
-    const li = document.createElement("li"), link = document.createElement("a");
-    link.textContent = D.titles[p[5]];
-    link.href = `https://pubmed.ncbi.nlm.nih.gov/?term=${encodeURIComponent(link.textContent)}`;
-    link.target = "_blank"; link.rel = "noopener";
-    li.appendChild(link); papers.appendChild(li);
-  }
-  function draw() {
-    if (!size) return;
-    const c = size / 2, radius = Math.max(0, c - 8), k = size / (region.radius * 5);
-    g.clearRect(0, 0, size, size);
-    g.save(); g.beginPath(); g.arc(c, c, radius, 0, Math.PI * 2); g.clip();
-    for (const [x, y, fine] of D.points) {
-      const sx = c + (x - region.x) * k, sy = c + (y - region.y) * k;
-      const on = highlighted && fine === region.id;
-      g.fillStyle = on ? "#6edcaa" : "rgba(209,203,194,0.28)";
-      g.fillRect(sx - 1.5, sy - 1.5, 3, 3);
-    }
-    if (highlighted) {
-      g.strokeStyle = "#6edcaa"; g.lineWidth = 1;
-      g.beginPath(); g.arc(c, c, region.radius * k, 0, Math.PI * 2); g.stroke();
-      g.fillStyle = "#6edcaa"; g.font = LABEL_FONT;
-      g.fillText("G-01", c + region.radius * k + 8, c + 3);
-    }
-    g.restore(); g.strokeStyle = "rgba(209,203,194,0.35)"; g.lineWidth = 1;
-    g.beginPath(); g.arc(c, c, radius, 0, Math.PI * 2); g.stroke();
-  }
-  function resize() {
-    size = canvas.getBoundingClientRect().width;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(size * dpr); canvas.height = Math.round(size * dpr);
-    g.setTransform(dpr, 0, 0, dpr, 0, 0); draw();
+  const log = root.querySelector(".session-log"), wire = document.querySelector(".wire");
+  const model = root.querySelector(".session-model"), providers = [...root.querySelectorAll("[data-provider]")];
+  const AGENTS = {
+    claude: { app: "Claude Code", model: "Claude Opus 5.5", mark: "#mark-claude",
+      answer: "The strongest candidate is <b>G-01, neurons · cortex · colliculus</b>: 105 demand papers, no review reaching it, and activity up 32% a year. Its core includes recent superior colliculus and macaque V3A work. Worth a scoping search before you commit; this only covers your collection." },
+    chatgpt: { app: "Codex", model: "GPT-6.1 Sol", mark: "#mark-openai",
+      answer: "Top gap: <b>G-01 (neurons · cortex · colliculus)</b>. 105 demand papers, 0 coverage, +32%/yr. Core papers span 1985–2024, including superior colliculus and V3A studies. Suggest a scoping search next; the result holds for this collection only." },
+  };
+  const gaps = D.gaps.slice(0, 3).map((gp, i) => ({ code: `G-0${i + 1}`, ...gp }));
+  const PAPERS = [ // three of G-01's core papers, from the gap scan
+    ["Rapid Input-Output Transformation between Local Field Potential and Spiking Activity during Sensation but not Action in the Superior Colliculus.", 2023],
+    ["Differential clustering of visual and choice- and saccade-related activity in macaque V3A and CIP.", 2024],
+    ["Pulvinar nuclei of the behaving rhesus monkey: visual responses and their modulation.", 1985],
+  ];
+  let agent = "claude", timers = [];
+  const later = (ms, fn) => timers.push(setTimeout(fn, reduced ? 0 : ms));
+  const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
+  const pulse = (dir) => { if (!wire || reduced) return; wire.classList.remove("out", "back"); void wire.offsetWidth; wire.classList.add(dir); };
+  function tool(at, name, args, out) {
+    later(at, () => {
+      const li = add("s-tool running", `<div class="s-call"><span>inVectus ·</span> <b>${name}</b> <span class="s-args">${args}</span></div>`);
+      pulse("out");
+      later(650, () => { li.classList.remove("running"); li.insertAdjacentHTML("beforeend", `<div class="s-out">${out}</div>`); pulse("back"); });
+    });
   }
   function play() {
-    clearTimeout(revealTimer);
-    animations.forEach((a) => a.cancel()); animations = [];
-    highlighted = reduced; draw();
-    root.querySelector(".story-tool-label").textContent = reduced ? "Collection evidence retrieved" : "Reading your collection’s gap evidence";
-    if (reduced) return;
-    for (const [selector, delay] of [[".story-question", 0], [".story-tool", 500], [".story-answer", 1600], [".story-evidence", 2600]]) {
-      animations.push(root.querySelector(selector).animate(
-        [{ opacity: 0, transform: "translateY(6px)" }, { opacity: 1, transform: "none" }],
-        { duration: 450, delay, easing: "ease-out", fill: "backwards" }
-      ));
-    }
-    revealTimer = setTimeout(() => {
-      highlighted = true; draw();
-      root.querySelector(".story-tool-label").textContent = "Collection evidence retrieved";
-    }, 1800);
+    timers.forEach(clearTimeout); timers = []; log.innerHTML = "";
+    const a = AGENTS[agent];
+    model.textContent = a.model;
+    later(0, () => add("s-user", "Which topics have demand but no reviews yet?"));
+    tool(700, "list_gaps", "kind: coverage · top 3", gaps.map((gp) =>
+      `<div class="row"><span>${gp.code}</span><span>${esc(gp.label)}</span><span>${gp.demand} demand · ${gp.coverage} coverage</span></div>`).join(""));
+    tool(2100, "gap_detail", "G-01", `<div>${esc(gaps[0].explanation)}</div>` +
+      PAPERS.map(([t, y]) => `<div class="paper">${esc(t)}<em>${y}</em></div>`).join(""));
+    later(3500, () => add("s-agent", `<span class="who"><svg width="15" height="15" aria-hidden="true"><use href="${a.mark}"/></svg>${a.model}</span><p>${a.answer}</p>`));
+    tool(4700, "suggest_decision", "G-01 → confirmed gap", "<div>Sent to inVectus for your review.</div>");
+    later(5600, () => {
+      const li = add("s-decision", `<span class="what"><b>Suggested by ${a.model}:</b> mark G-01 as a confirmed gap</span><span class="state">Waiting for you</span><button type="button" class="btn small primary">Accept</button><button type="button" class="btn small">Dismiss</button>`);
+      li.querySelectorAll("button").forEach((b) => b.addEventListener("click", () => {
+        li.classList.add("done");
+        li.querySelector(".state").textContent = b.textContent === "Accept" ? "Accepted by you" : "Dismissed by you";
+      }));
+    });
   }
-  providers.forEach((button) => button.addEventListener("click", () => {
-    const claude = button.dataset.provider === "claude";
-    providers.forEach((b) => b.setAttribute("aria-pressed", String(b === button)));
-    root.querySelector(".story-assistant-name").textContent = claude ? "Claude" : "ChatGPT";
-    root.querySelector(".story-assistant-mark use").setAttribute("href", claude ? "#mark-claude" : "#mark-openai");
+  providers.forEach((b) => b.addEventListener("click", () => {
+    agent = b.dataset.provider;
+    providers.forEach((x) => x.setAttribute("aria-pressed", String(x === b)));
+    play();
   }));
-  root.querySelector(".story-replay").addEventListener("click", play);
-  new ResizeObserver(resize).observe(canvas);
-  resize();
-  const observer = new IntersectionObserver((entries) => {
-    if (entries.some((e) => e.isIntersecting)) { observer.disconnect(); play(); }
-  }, { threshold: 0.25 });
-  observer.observe(root);
+  root.querySelector(".session-replay").addEventListener("click", play);
+  model.textContent = AGENTS[agent].model;
+  const io = new IntersectionObserver((entries) => { if (entries.some((e) => e.isIntersecting)) { io.disconnect(); play(); } }, { threshold: 0.3 });
+  io.observe(root);
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
@@ -816,7 +802,7 @@ function reveals() {
 }
 
 heroMap();
-agentStory();
+agentSession();
 searchDemo();
 copyButtons();
 footerMark();
