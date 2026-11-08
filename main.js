@@ -987,13 +987,14 @@ function copyButtons() {
 function footerMark() {
   // The wordmark drawn like the stars above it: each point gets a random depth (size and opacity),
   // points jitter slightly off the grid, and they flicker in half a second after the footer
-  // arrives. After that, soft pulses brighten small random patches of the letters now and then.
+  // arrives. After that, small blips go off now and then: a point flashes and a ring of brightness
+  // spreads out from it through the letters, like a radar blip.
   const canvas = document.querySelector(".foot-mark");
   if (!canvas) return;
   const g = canvas.getContext("2d");
   const ink = "#e9e4dc", accent = "#6edcaa", STEP = 6;
   const DEPTHS = [{ size: 3, alpha: 0.5 }, { size: 2, alpha: 0.3 }, { size: 2, alpha: 0.15 }];
-  const PULSE_MS = 1400, PULSE_R = 34;
+  const PULSE_MS = 1300, PULSE_R = 70, RING = 12;
   const flicker = {
     starts: new Map(), until: 0,
     sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 500 + Math.random() * 1600; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
@@ -1037,11 +1038,15 @@ function footerMark() {
     g.clearRect(0, 0, W, H);
     pulses = pulses.filter((p) => now < p.t0 + PULSE_MS);
     for (const p of dots) {
-      // Pulse boost: a smooth rise and fall, strongest at the pulse's centre.
+      // Blip: a bright centre that fades fast, and a ring that travels outward and fades as it goes.
       let boost = 0;
       for (const q of pulses) {
-        const dist = Math.hypot(p.x - q.x, p.y - q.y);
-        if (dist < PULSE_R) boost = Math.max(boost, Math.sin(Math.PI * (now - q.t0) / PULSE_MS) * (1 - dist / PULSE_R));
+        const t = (now - q.t0) / PULSE_MS, dist = Math.hypot(p.x - q.x, p.y - q.y);
+        if (dist > PULSE_R + RING) continue;
+        const ease = 1 - (1 - t) ** 3, r = ease * PULSE_R;
+        const ring = Math.max(0, 1 - Math.abs(dist - r) / RING) * (1 - t);
+        const core = dist < 10 ? Math.max(0, 1 - t * 3) : 0;
+        boost = Math.max(boost, ring, core);
       }
       const o = shown ? flicker.opacity(p.key, now) : 0;
       g.globalAlpha = Math.min(0.95, p.d.alpha + 0.6 * boost) * o;
