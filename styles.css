@@ -483,12 +483,17 @@ body { background: transparent; }
 .m-stats div { padding: 10px 12px; border-left: 1px solid #d3cdc3; } .m-stats div:first-child { border-left: 0; padding-left: 0; }
 .m-stats b { display: block; font-size: 19px; font-weight: 300; } .m-stats small { font-size: 11px; color: rgba(27, 26, 24, 0.62); }
 .m-stats span { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(27, 26, 24, 0.62); }
-.m-meter { display: block; height: 2px; background: #d3cdc3; } .m-meter i { display: block; height: 100%; width: calc(var(--w) * 100%); background: #1b1a18; transform-origin: left; }
-.m-terms { display: grid; gap: 8px; } .m-terms div { display: grid; grid-template-columns: 1fr 100px 44px; gap: 12px; align-items: center; font-size: 12px; } .m-terms b { font-weight: 400; text-align: right; }
+.m-meter { display: block; height: 3px; background: #d3cdc3; } .m-meter i { display: block; height: 100%; width: calc(var(--w) * 100%); background: #1b1a18; transform-origin: left; }
+.m-terms { display: grid; gap: 8px; } .m-terms div { display: grid; grid-template-columns: minmax(0, 1fr) 70px 44px; gap: 8px; align-items: center; font-size: 14px; } .m-terms b { font-weight: 400; text-align: right; }
 .m-key { display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; color: rgba(27, 26, 24, 0.62); }
-.m-key i { width: 7px; height: 7px; background: #1b1a18; } .m-key i.cov { background: #0f7a50; margin-left: 6px; }
-.m-years { display: flex; align-items: flex-end; gap: 2px; height: 64px; border-bottom: 1px solid #d3cdc3; }
-.m-years i { flex: 1; height: calc(var(--h) * 100%); background: #1b1a18; opacity: 0.75; transform-origin: bottom; }
+.m-key i { width: 8px; height: 8px; background: rgba(27, 26, 24, 0.62); } .m-key i.cov { background: #1b1a18; margin-left: 6px; }
+.m-years { display: flex; gap: 0; height: 100px; align-items: stretch; border-bottom: 1px solid #bfb8ac; }
+.m-year { flex: 1; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.m-bars { flex: 1; display: flex; justify-content: center; gap: 3px; align-items: flex-end; }
+.m-bars i { flex: 0 0 1px; min-height: 1px; height: calc(var(--h) * 100%); transform-origin: center bottom; }
+.m-bars .m-demand { background: rgba(27, 26, 24, 0.62); }
+.m-bars .m-coverage { background: #1b1a18; }
+.m-year > span { font-size: 8px; color: rgba(27, 26, 24, 0.62); text-align: center; overflow: hidden; }
 .m-saved { display: grid; gap: 6px; padding: 12px 0; border-top: 1px solid #d3cdc3; }
 .m-saved b { font-weight: 400; } .m-big { font-size: 15px; }
 /* Entrance animations each time a mockup becomes active. */

@@ -675,9 +675,9 @@ function mockHTML(kind) {
       <div class="a" style="--i:2"><b class="m-h3">Why it’s flagged</b><div class="m-muted m-small">105 demand items and no coverage item reaches this region, activity +32%/yr.</div></div>
       <div class="m-stats a" style="--i:3"><div><b>105</b><span>Demand</span></div><div><b>0</b><span>Coverage</span></div><div><b>+32%<small>/yr</small></b><span>Activity</span></div></div>
       <div class="m-label m-split a" style="--i:4"><span>Score breakdown</span><span>3.64</span></div>
-      <div class="m-terms a" style="--i:5"><div><span>Demand per coverage item</span><span class="m-meter"><i style="--w:0.85"></i></span><b>+3.09</b></div><div><span>Momentum</span><span class="m-meter"><i style="--w:0.15"></i></span><b>+0.55</b></div></div>
+      <div class="m-terms a" style="--i:5"><div><span>Demand per coverage item</span><span class="m-meter"><i style="--w:1"></i></span><b>+3.09</b></div><div><span>Momentum</span><span class="m-meter"><i style="--w:${(0.55 / 3.09).toFixed(4)}"></i></span><b>+0.55</b></div></div>
       <div class="m-h3 a" style="--i:6">Per year <span class="m-key"><i></i>Demand <i class="cov"></i>Coverage</span></div>
-      <div class="m-years">${TL.map(([y, n], i) => `<i style="--h:${(n / max).toFixed(2)};--i:${i}" title="${y}: ${n}"></i>`).join("")}</div>
+      <div class="m-years" role="img" aria-label="Demand and coverage items per year">${TL.map(([y, n], i) => `<div class="m-year" style="--i:${i}" title="${y}: ${n} demand, 0 coverage"><div class="m-bars"><i class="m-demand" style="--h:${n / max}"></i><i class="m-coverage" style="--h:0"></i></div><span>${i % Math.ceil(TL.length / 12) === 0 ? "'" + String(y).slice(2) : "&nbsp;"}</span></div>`).join("")}</div>
       <b class="m-h3 a" style="--i:7">What would fill this gap?</b>
     </div>`;
   }
