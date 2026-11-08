@@ -781,6 +781,11 @@ function getStars() {
   // depth: size (px), opacity, parallax factor (share of the scroll the layer cancels out)
   const DEPTHS = [{ size: 3, alpha: 0.62, drift: 0.22, share: 0.18 }, { size: 2, alpha: 0.36, drift: 0.34, share: 0.32 }, { size: 1.4, alpha: 0.2, drift: 0.46, share: 0.5 }];
   const COUNT = 340;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const [x, y] of D.points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+  const fit = { x0, y0, x1, y1 };
+  const regionById = new Map(D.regions.map((r) => [r.id, r]));
+  let sky = { ax: 0, ay: 0, sx: 1, sy: 1 }, pinned = null;
   // The Earth's horizon in the photo (top of the atmosphere glow), as a share of image height at
   // each 5% of its width, measured from assets/earth.jpg. No star is drawn below it.
   const HORIZON = [0.193, 0.199, 0.207, 0.218, 0.226, 0.237, 0.251, 0.272, 0.293, 0.318, 0.342, 0.371, 0.403, 0.435, 0.469, 0.507, 0.547, 0.59, 0.636, 0.683, 0.73];
@@ -805,15 +810,19 @@ function getStars() {
     const copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
     let seed = 9071;
     const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    stars = [];
+    stars = []; pinned = null;
+    // Stars sit at their papers' real map positions, stretched across the sky above the footer,
+    // so the collection's clusters read as constellations. sky maps map coords to canvas px.
+    const skyH = Math.max(200, (Number.isFinite(footTop) ? footTop : H) - 40);
+    sky = { ax: W * 0.02, ay: skyH * 0.03, sx: (W * 0.96) / (fit.x1 - fit.x0), sy: (skyH * 0.94) / (fit.y1 - fit.y0) };
     for (let i = 0; i < COUNT * 3 && stars.length < COUNT; i++) {
-      const x = rand() * W, y = rand() * H;
+      const p = D.points[Math.floor(rand() * D.points.length)];
+      const x = sky.ax + (p[0] - fit.x0) * sky.sx, y = sky.ay + (p[1] - fit.y0) * sky.sy;
       const depth = DEPTHS[rand() < 0.2 ? 0 : rand() < 0.45 ? 1 : 2];
       // Near stars keep clear of the copy; faint far ones may sit closer to it.
       const pad = depth === DEPTHS[0] ? 24 : 8;
       if (x > copy.l - pad && x < copy.rt + pad && y > copy.t - pad && y < copy.b + pad) continue;
       if (y > footTop - 12) continue; // none behind the footer card
-      const p = D.points[Math.floor(rand() * D.points.length)];
       stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p, key: `s:${i}` });
     }
     stars.sort((a, b) => a.d.size - b.d.size); // far first, near on top
@@ -835,23 +844,53 @@ function getStars() {
       g.fillRect(x - size / 2, y - size / 2, size, size);
     });
     g.globalAlpha = 1;
+    // A pinned paper: its region's bounds as a dashed outline and a mint ×, as in the data circle.
+    if (pinned && !pinned.hidden && shown) {
+      const reg = regionById.get(pinned.p[2]), [px, py] = at(pinned), dy = py - pinned.y;
+      if (reg) {
+        const cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
+        g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
+        g.beginPath(); g.ellipse(cx, cy, Math.max(8, reg.radius * sky.sx), Math.max(8, reg.radius * sky.sy), 0, 0, Math.PI * 2); g.stroke();
+        g.setLineDash([]);
+      }
+      g.strokeStyle = "#6edcaa"; g.lineWidth = 1.5;
+      g.beginPath(); g.moveTo(px - 5, py - 5); g.lineTo(px + 5, py + 5); g.moveTo(px + 5, py - 5); g.lineTo(px - 5, py + 5); g.stroke();
+    }
     if (shown && flicker.pending(now)) frame = requestAnimationFrame(draw);
   }
-  function pick(e) {
-    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
-    let best = -1, bd = 12 * 12;
-    stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
-    if (best !== hot) { hot = best; draw(); }
-    if (best < 0) { tip.hidden = true; return; }
-    const [, , fine, , year, ti] = stars[best].p, sr = section.getBoundingClientRect(), [sx, sy] = at(stars[best]);
+  function showTip(star) {
+    if (!star || star.hidden) { tip.hidden = true; return; }
+    const r = canvas.getBoundingClientRect(), sr = section.getBoundingClientRect(), [sx, sy] = at(star);
+    const [, , fine, , year, ti] = star.p;
     tip.innerHTML = `${esc(D.titles[ti])}<span>${year ?? ""}${year ? " · " : ""}${esc(regions.get(fine) ?? "")}</span>`;
     tip.hidden = false;
     tip.style.left = `${Math.min(sx + r.left - sr.left + 14, sr.width - tip.offsetWidth - 12)}px`;
     tip.style.top = `${sy + r.top - sr.top + 14}px`;
   }
+  function starAt(e) {
+    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = -1, bd = 12 * 12;
+    stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
+    return best;
+  }
+  // Click a star to pin it (× and region outline); click it again to clear.
+  section.addEventListener("click", (e) => {
+    const i = starAt(e);
+    if (i < 0) return;
+    pinned = pinned === stars[i] ? null : stars[i];
+    draw(); showTip(pinned ?? stars[i]);
+    if (!pinned) tip.hidden = true;
+  });
+  function pick(e) {
+    const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    let best = -1, bd = 12 * 12;
+    stars.forEach((s, i) => { if (s.hidden) return; const [sx, sy] = at(s), d = (sx - x) ** 2 + (sy - y) ** 2; if (d < bd) { bd = d; best = i; } });
+    if (best !== hot) { hot = best; draw(); }
+    showTip(best >= 0 ? stars[best] : pinned);
+  }
   section.addEventListener("pointermove", pick);
   section.addEventListener("pointerdown", pick);
-  section.addEventListener("pointerleave", () => { hot = -1; tip.hidden = true; draw(); });
+  section.addEventListener("pointerleave", () => { hot = -1; draw(); showTip(pinned); });
 
   // Parallax (desktop): each star depth and the Earth drift at their own speed.
   let ticking = false;
@@ -861,8 +900,8 @@ function getStars() {
     const r = cta.getBoundingClientRect();
     offset = r.top - innerHeight / 2 + r.height / 2;
     earth?.style.setProperty("--earth-py", `${(-offset * 0.12).toFixed(1)}px`);
-    if (!tip.hidden) { tip.hidden = true; hot = -1; }
-    draw();
+    hot = -1;
+    draw(); if (pinned) showTip(pinned); else tip.hidden = true;
   }
   addEventListener("scroll", () => { if (!light && visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
   new IntersectionObserver((entries) => {
