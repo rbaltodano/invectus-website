@@ -609,67 +609,6 @@ function agentChat() {
   }, { threshold: 0.3 }).observe(root);
 }
 
-/* ---------- Hero starfield: faint light squares outside the circle ----------
-   Three depths (size, opacity, scroll drift) like the stars at the bottom of the page; they
-   flicker in with the map and stay out of the circle, the copy and the gap list. */
-function heroStars() {
-  const hero = document.querySelector(".hero"), canvas = hero?.querySelector(".hero-stars");
-  if (!canvas) return;
-  const g = canvas.getContext("2d"), ink = getComputedStyle(hero).getPropertyValue("--ink-rgb").trim() || "27, 26, 24";
-  const DEPTHS = [{ size: 3, alpha: 0.32, drift: 0.05 }, { size: 2, alpha: 0.2, drift: 0.12 }, { size: 2, alpha: 0.11, drift: 0.2 }];
-  const parallax = !reduced && matchMedia("(pointer: fine) and (min-width: 1025px)").matches;
-  const flicker = {
-    starts: new Map(), until: 0,
-    sync(keys, now) { this.starts = new Map(); this.until = 0; for (const k of keys) { const t = now + 300 + Math.random() * 1400; this.starts.set(k, t); this.until = Math.max(this.until, t + 600); } },
-    opacity(k, now) { const t = this.starts.get(k); if (reduced || t === undefined || now >= t + 600) return 1; if (now < t) return 0; return [1, 0.2, 0.85, 0.35, 0.7, 0.5][Math.floor((now - t) / 600 * 6)]; },
-    pending(now) { return now < this.until; },
-  };
-  let stars = [], W = 0, H = 0, circle = null, frame, shift = 0, started = false;
-  function layout() {
-    if (!circle) return;
-    const r = hero.getBoundingClientRect(); W = r.width; H = r.height;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const avoid = [".hero-copy > *", ".hero-note", ".nav", ".map-controls"].flatMap((sel) => [...document.querySelectorAll(sel)])
-      .map((el) => el.getBoundingClientRect()).filter((b) => b.width).map((b) => ({ l: b.left - r.left - 28, t: b.top - r.top - 16, rt: b.right - r.left + 28, b: b.bottom - r.top + 16 }));
-    let seed = 7321;
-    const rand = () => { seed = (seed * 16807) % 2147483647; return (seed - 1) / 2147483646; };
-    const count = Math.round((W * H) / 5200), MIN = 14;
-    stars = [];
-    for (let i = 0; i < count * 4 && stars.length < count; i++) {
-      const x = rand() * W, y = rand() * H;
-      if (Math.hypot(x - circle.C.x, y - circle.C.y) < circle.R + 18) continue;
-      if (avoid.some((b) => x > b.l && x < b.rt && y > b.t && y < b.b)) continue;
-      if (stars.some((o) => (o.x - x) ** 2 + (o.y - y) ** 2 < MIN * MIN)) continue;
-      const v = rand();
-      stars.push({ x, y, d: DEPTHS[v < 0.2 ? 0 : v < 0.55 ? 1 : 2], key: `h:${i}` });
-    }
-    if (!started) { started = true; flicker.sync(stars.map((s) => s.key), performance.now()); }
-    draw();
-  }
-  function draw() {
-    cancelAnimationFrame(frame);
-    const now = performance.now();
-    g.clearRect(0, 0, W, H);
-    for (const s of stars) {
-      g.globalAlpha = s.d.alpha * flicker.opacity(s.key, now);
-      g.fillStyle = `rgb(${ink})`;
-      const y = s.y + shift * s.d.drift;
-      g.fillRect(Math.round(s.x - s.d.size / 2), Math.round(y - s.d.size / 2), s.d.size, s.d.size);
-    }
-    g.globalAlpha = 1;
-    if (flicker.pending(now)) frame = requestAnimationFrame(draw);
-  }
-  addEventListener("herocircle", (e) => { circle = e.detail; layout(); });
-  if (parallax) {
-    let ticking = false;
-    addEventListener("scroll", () => {
-      if (ticking || scrollY > innerHeight * 1.2) return;
-      ticking = true; requestAnimationFrame(() => { ticking = false; shift = scrollY; draw(); });
-    }, { passive: true });
-  }
-}
-
 /* ---------- Rim trail: the hero circle's edge continues faintly into the dark section ---------- */
 function rimTrail() {
   const hero = document.querySelector(".hero"), section = document.querySelector("#features"), canvas = section?.querySelector(".rim-trail");
@@ -1187,7 +1126,6 @@ function reveals() {
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
 }
 
-heroStars();
 rimTrail();
 heroMap();
 agentChat();

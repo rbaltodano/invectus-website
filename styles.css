@@ -391,9 +391,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .foot { padding-top: clamp(24px, 4vw, 64px); }
 
 /* Hero extras around the map (the map itself stays as in the app):
-   a faint light starfield outside the circle, the app's ranked gap list beside it, and the
-   circle's rim continuing into the dark section below. */
-.hero-stars { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+   the app's ranked gap list beside it, and the circle's rim continuing into the dark section below. */
 .hero-gaps { list-style: none; margin: 28px 0 0; padding: 0; max-width: 420px; }
 .hero-gaps li { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 12px; align-items: baseline; padding: 9px 0; border-top: 1px solid var(--line); font-size: 13px; cursor: pointer; transition: color 150ms ease; opacity: 0; animation: gap-slide-in 300ms ease-out forwards; animation-delay: calc(900ms + var(--i) * 70ms); }
 .hero-gaps li:last-child { border-bottom: 1px solid var(--line); }
