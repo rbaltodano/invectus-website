@@ -19,3 +19,6 @@ python3 -m http.server 8765
 
 MIT licensed, like the app. The Claude and OpenAI marks are their owners' trademarks, used only
 to name the agent clients.
+
+When publishing CSS or JavaScript changes, refresh the matching asset URL’s `?v=` value in
+`index.html` using the first 12 characters of its SHA-256 hash so browsers fetch the new file.
