@@ -319,3 +319,5 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 }
 @media (prefers-reduced-motion: reduce) { .chat-replay { display: none; } }
 .chat-log.leaving { opacity: 0; transform: translateY(-8px); }
+.c-think { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 12.5px; color: var(--ink); }
+.c-think-text .shimmer-ch { white-space: pre; opacity: 0.35; }

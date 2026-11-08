@@ -510,10 +510,12 @@ function agentChat() {
   const STEPS = [
     { user: "Which topics have plenty of studies but no reviews yet?" },
     { bot: "chatgpt", name: "ChatGPT", mark: "#mark-openai", tool: "list_gaps",
+      think: ["Looking for topics with studies but no reviews", "Calling inVectus · list_gaps (coverage)", "Comparing the top 3 gaps"],
       text: "The strongest one is <b>neurons · cortex · colliculus</b>: 105 studies and no review reaching that region, with activity up 32% a year. Next are retinal gene and cell work (108 studies) and luminance and colour vision (82).",
       cite: "In your collection only · <b>G-01</b>, G-02, G-03" },
     { user: "Has anyone looked at the gut microbiome and uveitis flares?" },
     { bot: "claude", name: "Claude", mark: "#mark-claude", tool: "check_idea",
+      think: ["Checking whether this idea is already in the collection", "Calling inVectus · check_idea", "Reading the nearest papers"],
       text: "<b>Near, not the same.</b> Related work is here, but nothing on that exact question. It sits between the HLA-B27 uveitis papers and the experimental autoimmune uveitis work.",
       cite: "Nearest: <b>Immunosuppression in the management of presumed non-infective uveitis</b> (2020, 0.83) · <b>HLA-B27 positive acute anterior uveitis: a manifestation of subclinical gut inflammation</b> (1990, 0.78)" },
   ];
@@ -532,11 +534,29 @@ function agentChat() {
     log.classList.remove("leaving"); log.innerHTML = "";
     if (reduced) { add("c-user", esc(q.user)); answer(a); return; }
     add("c-user", esc(q.user));
-    let typing;
-    later(800, () => { typing = add("c-bot", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${a.mark}"/></svg></span><span class="c-bubble c-typing" aria-label="${a.name} is answering"><i></i><i></i><i></i></span>`); pulse("out"); });
-    later(2200, () => { typing?.remove(); answer(a); pulse("back"); });
-    later(8200, () => log.classList.add("leaving"));
-    later(8700, () => {
+    // What the agent shows while it works: short status lines with the terminal shimmer.
+    let think, ticker;
+    const say = (text) => {
+      const line = think.querySelector(".c-think-text");
+      line.innerHTML = Array.from(text).map((ch) => `<span class="shimmer-ch">${esc(ch)}</span>`).join("");
+      line.setAttribute("aria-label", text);
+      const chars = [...line.children], span = chars.length + 4;
+      let tick = 0;
+      clearInterval(ticker);
+      ticker = setInterval(() => {
+        const head = (tick++ % (span + 6)) - 2;
+        chars.forEach((c, i) => { const d = Math.abs(i - head); c.style.opacity = d === 0 ? 1 : d === 1 ? 0.65 : 0.35; });
+      }, 120);
+    };
+    later(700, () => {
+      think = add("c-think", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${a.mark}"/></svg></span><span class="c-think-text"></span>`);
+      say(a.think[0]);
+    });
+    later(1500, () => { say(a.think[1]); pulse("out"); });
+    later(2400, () => { say(a.think[2]); pulse("back"); });
+    later(3300, () => { clearInterval(ticker); think?.remove(); answer(a); });
+    later(9300, () => log.classList.add("leaving"));
+    later(9800, () => {
       index = (index + 1) % EXCHANGES.length;
       if (visible) exchange(); else running = false;
     });
