@@ -833,6 +833,22 @@ function getStars() {
       if (y > footTop - 12) continue; // none behind the footer card
       stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p, key: `s:${i}` });
     }
+    // The map leaves some of the sky empty (the lower right especially). Fill any empty patch of
+    // open sky with a star or two at random spots; these are still real papers, but placed freely,
+    // so pinning one shows no region outline.
+    const er = earth?.getBoundingClientRect(), CELL = W < 760 ? 70 : 90;
+    for (let cy = 0; cy < skyH; cy += CELL) for (let cx = 0; cx < W; cx += CELL) {
+      if (stars.some((o) => o.x >= cx && o.x < cx + CELL && o.y >= cy && o.y < cy + CELL)) continue;
+      const n = rand() < 0.5 ? 1 : 2;
+      for (let k = 0; k < n; k++) {
+        const x = cx + rand() * CELL, y = cy + rand() * CELL;
+        if (er && y > horizonY(x, r, er) - 24) continue;
+        if (x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16) continue;
+        if (stars.some((o) => (o.x - x) ** 2 + (o.y - y) ** 2 < MIN_GAP * MIN_GAP)) continue;
+        const depth = DEPTHS[rand() < 0.2 ? 0 : rand() < 0.45 ? 1 : 2];
+        stars.push({ x: Math.round(x), y: Math.round(y), d: depth, p: D.points[Math.floor(rand() * D.points.length)], key: `f:${cx}:${cy}:${k}`, filler: true });
+      }
+    }
     stars.sort((a, b) => a.d.size - b.d.size); // far first, near on top
     if (shown) flicker.sync(stars.map((st) => st.key), performance.now());
     draw();
@@ -854,7 +870,7 @@ function getStars() {
     g.globalAlpha = 1;
     // A pinned paper: its region's bounds as a dashed outline and a mint ×, as in the data circle.
     if (pinned && !pinned.hidden && shown) {
-      const reg = regionById.get(pinned.p[2]), [px, py] = at(pinned), dy = py - pinned.y;
+      const reg = pinned.filler ? null : regionById.get(pinned.p[2]), [px, py] = at(pinned), dy = py - pinned.y;
       if (reg) {
         const cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
         g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
