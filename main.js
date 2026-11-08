@@ -788,7 +788,7 @@ function getStars() {
   let sky = { ax: 0, ay: 0, sx: 1, sy: 1 }, pinned = null;
   // The Earth's horizon in the photo (top of the atmosphere glow), as a share of image height at
   // each 5% of its width, measured from assets/earth.jpg. No star is drawn below it.
-  const HORIZON = [0.193, 0.199, 0.207, 0.218, 0.226, 0.237, 0.251, 0.272, 0.293, 0.318, 0.342, 0.371, 0.403, 0.435, 0.469, 0.507, 0.547, 0.59, 0.636, 0.683, 0.73];
+  const HORIZON = [0.198, 0.203, 0.211, 0.221, 0.232, 0.242, 0.255, 0.275, 0.298, 0.322, 0.345, 0.374, 0.406, 0.439, 0.474, 0.512, 0.55, 0.592, 0.636, 0.683, 0.73];
   function horizonY(x, cr, er) {
     const t = Math.max(0, Math.min(1, (x - (er.left - cr.left)) / er.width)) * 20, i = Math.min(19, Math.floor(t));
     return er.top - cr.top + (HORIZON[i] + (HORIZON[i + 1] - HORIZON[i]) * (t - i)) * er.height;
@@ -802,8 +802,9 @@ function getStars() {
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); g.setTransform(dpr, 0, 0, dpr, 0, 0);
     // Put the Earth's horizon just above the footer card.
     if (earth && foot) {
-      const eh = earth.getBoundingClientRect().height || earth.offsetWidth * 720 / 1680;
-      earth.style.setProperty("--earth-top", `${foot.offsetTop - eh * 0.193 - (W < 760 ? 40 : 90)}px`);
+      // The horizon sits well above the footer card, so most of the Earth is in view.
+      const eh = earth.getBoundingClientRect().height || earth.offsetWidth * 823 / 1920;
+      earth.style.setProperty("--earth-top", `${foot.offsetTop - eh * 0.198 - (W < 760 ? 160 : Math.max(240, cta.offsetHeight * 0.32))}px`);
     }
     const fr = foot?.getBoundingClientRect(), footTop = fr ? fr.top - r.top : Infinity;
     const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());

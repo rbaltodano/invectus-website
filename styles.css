@@ -372,3 +372,9 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 /* Always fade the bottom of the section into the footer, wherever the parallax puts the Earth. */
 .space { position: relative; overflow: hidden; background: var(--bg); }
 @media (pointer: coarse), (max-width: 1024px) { .foot { -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px); } }
+
+/* The new photo's sky is pure black, so the space background matches it exactly: the photo sits
+   on the page with no blending or edge masks, and no haze. It is also shown larger. */
+.space { background: #000; }
+.get-earth { width: max(1300px, 118%); mix-blend-mode: normal; -webkit-mask-image: none; mask-image: none; }
+@media (max-width: 760px) { .get-earth { width: 1000px; } }
