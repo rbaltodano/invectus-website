@@ -427,7 +427,11 @@ body { background: transparent; }
   .story-step, .story-step:first-child, .story-step:last-child { min-height: 0; padding: 0 0 56px; opacity: 1; }
 }
 #features .wrap { max-width: 1480px; }
-@media (min-width: 901px) { .story { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); } .story-stage { top: var(--stage-top, 15vh); } }
+@media (min-width: 901px) {
+  .story { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-areas: "steps window"; }
+  .story-steps { grid-area: steps; }
+  .story-stage { grid-area: window; top: var(--stage-top, 15vh); }
+}
 
 /* Story mockups: pieces of the app rebuilt 1:1 in HTML (the app's light palette and type). */
 .story-stage { position: sticky; top: var(--stage-top, 15vh); align-self: start; display: grid; }
