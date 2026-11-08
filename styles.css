@@ -271,7 +271,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .agents-intro { max-width: 720px; margin: 0 auto clamp(40px, 5vw, 64px); text-align: center; }
 .agents-intro h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; letter-spacing: -0.03em; text-wrap: balance; margin-bottom: 20px; }
 .agents-intro p { margin: 0 auto; max-width: 560px; }
-.session { max-width: 820px; margin: 0 auto; border: 1px solid var(--line-2); border-radius: 12px; background: #1a1a1a; overflow: hidden; }
+.session { max-width: 820px; margin: 0 auto; border: 1px solid var(--line-2); border-radius: 12px; background: var(--surface); overflow: hidden; }
 .session-bar { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .session-providers { display: flex; gap: 4px; }
 .session-providers button { display: inline-flex; align-items: center; gap: 8px; padding: 6px 10px; border: 0; border-radius: var(--r); background: none; color: var(--dim); font: inherit; font-size: 12.5px; cursor: pointer; }
