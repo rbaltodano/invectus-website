@@ -352,3 +352,4 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
   mask-composite: intersect; }
 .get .get-center { padding-bottom: clamp(80px, 12vw, 180px); }
 @media (max-width: 760px) { .get { min-height: 760px; } .get-earth { width: 900px; transform: translateY(36%); } }
+.get .install { background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); -webkit-backdrop-filter: blur(80px); backdrop-filter: blur(80px); }
