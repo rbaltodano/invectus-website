@@ -782,34 +782,44 @@ function getStars() {
     const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());
     copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
     const skyBottom = sr.bottom - r.top - sr.height * (W < 760 ? 0.42 : 0.38);
+    // Even coverage: one star per cell of a grid sized for ~140 stars, jittered within its cell.
     seed = 9071; for (let i = 0; i < 140; i++) rand(); // same placement on every layout
-    stars = [];
-    for (const p of picks) {
-      for (let tries = 0; tries < 12; tries++) {
-        const x = rand() * W, y = rand() * skyBottom;
-        const behindCopy = x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16;
-        if (behindCopy) continue;
-        stars.push({ x, y, p, size: rand() < 0.15 ? 2.6 : rand() < 0.5 ? 1.8 : 1.2, phase: rand() * Math.PI * 2, speed: 0.4 + rand() * 0.8 });
-        break;
-      }
+    const cell = Math.sqrt((W * skyBottom) / 140), cols = Math.max(1, Math.round(W / cell)), rows = Math.max(1, Math.round(skyBottom / cell));
+    const cw = W / cols, ch = skyBottom / rows;
+    stars = []; let n = 0;
+    for (let row = 0; row < rows; row++) for (let col = 0; col < cols; col++) {
+      const x = (col + 0.15 + rand() * 0.7) * cw, y = (row + 0.15 + rand() * 0.7) * ch;
+      if (x > copy.l - 24 && x < copy.rt + 24 && y > copy.t - 16 && y < copy.b + 16) continue;
+      stars.push({ x: Math.round(x), y: Math.round(y), p: picks[n++ % picks.length], key: `s:${row}:${col}` });
     }
+    if (shown) flicker.sync(stars.map((s) => s.key), performance.now());
     draw();
   }
+  // Twinkle with the data circle's flicker: every so often a few stars replay the step sequence
+  // they flicker in with (dot-flicker.ts), then hold steady.
+  const flicker = new DotFlicker();
+  const STAR = 3;
+  function twinkle() {
+    if (!shown || !visible || reduced || !stars.length) return;
+    const now = performance.now();
+    for (let i = 0; i < 2; i++) flicker.starts.set(stars[Math.floor(Math.random() * stars.length)].key, now + Math.random() * 200);
+    flicker.until = Math.max(flicker.until, now + 200 + DOT_FLICKER_MS);
+    draw();
+  }
+  setInterval(twinkle, 260);
   function draw() {
     cancelAnimationFrame(frame);
-    const t = performance.now() / 1000;
+    const now = performance.now();
     g.clearRect(0, 0, W, H);
     stars.forEach((s, i) => {
-      const twinkle = light ? 0.85 : 0.65 + 0.35 * Math.sin(t * s.speed + s.phase);
       const on = i === hot;
-      g.globalAlpha = (shown ? 1 : 0) * (on ? 1 : 0.55 * twinkle);
+      g.globalAlpha = shown ? (on ? 1 : 0.55 * flicker.opacity(s.key, now)) : 0;
       g.fillStyle = on ? "#6edcaa" : "#e9e4dc";
-      const r = on ? 3.4 : s.size;
-      g.beginPath(); g.arc(s.x, s.y, r, 0, Math.PI * 2); g.fill();
-      if (on) { g.globalAlpha = 0.25; g.beginPath(); g.arc(s.x, s.y, 9, 0, Math.PI * 2); g.fill(); }
+      const size = on ? STAR + 2 : STAR;
+      g.fillRect(s.x - size / 2, s.y - size / 2, size, size);
     });
     g.globalAlpha = 1;
-    if (!light && shown && visible) frame = requestAnimationFrame(draw);
+    if (shown && visible && flicker.pending(now)) frame = requestAnimationFrame(draw);
   }
   function pick(e) {
     const r = canvas.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
@@ -841,7 +851,7 @@ function getStars() {
   addEventListener("scroll", () => { if (!light && visible && !ticking) { ticking = true; requestAnimationFrame(parallax); } }, { passive: true });
   new IntersectionObserver((entries) => {
     visible = entries.some((e) => e.isIntersecting);
-    if (visible) { shown = true; parallax(); draw(); }
+    if (visible) { if (!shown) { shown = true; flicker.sync(stars.map((st) => st.key), performance.now()); } parallax(); draw(); }
   }, { threshold: 0 }).observe(section);
   let rt;
   new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(layout, 100); }).observe(section);
