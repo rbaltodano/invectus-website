@@ -316,3 +316,15 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 #agents .figures { margin-top: clamp(64px, 8vw, 112px); }
 .verdicts .figure-note { transition: opacity 300ms ease; }
 .verdicts .figure-note.fading { opacity: 0; transition-duration: 200ms; }
+
+/* Stack the copy and full-width maps on tablets and phones. */
+@media (max-width: 1024px) {
+  .hero { height: auto; min-height: 0; padding-bottom: 100vw; }
+  .hero-copy { max-width: none; padding-top: 120px; }
+  .hero-note { position: relative; left: auto; bottom: auto; margin: 0 var(--gutter) 32px; max-width: 64ch; }
+  .verdicts .search-demo { grid-template-columns: minmax(0, 1fr); }
+  .verdicts .search-map-wrap { position: static; justify-self: start; max-width: none; width: calc(100% + 2 * var(--gutter)); margin-inline: calc(-1 * var(--gutter)); }
+}
+@media (max-width: 640px) {
+  .hero .map-controls { display: none; }
+}

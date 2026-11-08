@@ -120,26 +120,34 @@ function heroMap() {
   const fit = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, extent: Math.max(x1 - x0, y1 - y0), k: 1 };
 
   const flicker = new DotFlicker();
-  let W = 0, H = 0, R = 0, A = { x: 0, y: 0 }, cells = [], frame = 0, zoomFrame;
+  let W = 0, H = 0, R = 0, C = { x: 0, y: 0 }, A = { x: 0, y: 0 }, cells = [], frame = 0, zoomFrame;
   let view = { s: START_ZOOM, x: 0, y: 0 }, hover, pinned, drag, pinch;
   const t0 = performance.now();
   let phase = "done", laidOut = false, introTimer, introOver = false;
 
   const toScreen = (x, y) => [A.x + (x - fit.cx) * fit.k * view.s + view.x, A.y + (y - fit.cy) * fit.k * view.s + view.y];
-  const inside = (x, y, pad = 0) => (x - W) ** 2 + (y - H) ** 2 <= (R - pad) ** 2;
+  const inside = (x, y, pad = 0) => (x - C.x) ** 2 + (y - C.y) ** 2 <= (R - pad) ** 2;
   const regionName = (id) => regions.get(id)?.label ?? "";
 
   function layout() {
     const rect = hero.getBoundingClientRect();
     W = rect.width; H = rect.height;
-    // Keep the copy clear: the rim stays at least 28 px from the nearest corner of the text.
-    const box = [...hero.querySelectorAll(".hero-copy > *")].map((el) => el.getBoundingClientRect())
-      .reduce((a, b) => ({ right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) }), { right: 0, bottom: 0 });
-    const clear = Math.hypot(Math.max(0, W - (box.right - rect.left)), Math.max(0, H - (box.bottom - rect.top))) - 28;
-    R = Math.max(Math.hypot(W, H) * 0.3, Math.min(Math.hypot(W, H) * 0.56, clear));
-    // The data sits in the visible quadrant of the circle, centred on it.
-    A = { x: W - R * 0.5, y: H - R * 0.5 };
-    fit.k = (R * 0.86) / fit.extent;
+    if (W <= 1024) {
+      // On tablet and mobile, the full circle follows the copy and its real-data note.
+      R = W / 2;
+      C = { x: W / 2, y: H - R };
+      A = { ...C };
+      fit.k = (R * 1.72) / fit.extent;
+    } else {
+      // Keep the desktop copy clear of the bottom-right circle.
+      const box = [...hero.querySelectorAll(".hero-copy > *")].map((el) => el.getBoundingClientRect())
+        .reduce((a, b) => ({ right: Math.max(a.right, b.right), bottom: Math.max(a.bottom, b.bottom) }), { right: 0, bottom: 0 });
+      const clear = Math.hypot(Math.max(0, W - (box.right - rect.left)), Math.max(0, H - (box.bottom - rect.top))) - 28;
+      R = Math.max(Math.hypot(W, H) * 0.3, Math.min(Math.hypot(W, H) * 0.56, clear));
+      C = { x: W, y: H };
+      A = { x: W - R * 0.5, y: H - R * 0.5 };
+      fit.k = (R * 0.86) / fit.extent;
+    }
     if (!laidOut) { view = { s: START_ZOOM, x: 0, y: 0 }; laidOut = true; }
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
@@ -190,14 +198,14 @@ function heroMap() {
 
     g.clearRect(0, 0, W, H);
     g.save();
-    g.beginPath(); g.arc(W, H, R - 1, 0, Math.PI * 2); g.clip();
+    g.beginPath(); g.arc(C.x, C.y, R - 1, 0, Math.PI * 2); g.clip();
 
     if (phase !== "done") {
       const ease = glide * glide * (3 - 2 * glide);
       g.fillStyle = INK;
       for (let i = 0; i < PLACEHOLDERS; i++) {
         const [ux, uy] = disc(i);
-        let x = W + ux * R, y = H + uy * R;
+        let x = C.x + ux * R, y = C.y + uy * R;
         if (glide > 0 && cells.length) { const t = cells[(i * 7919) % cells.length]; x += (t.x - x) * ease; y += (t.y - y) * ease; }
         g.globalAlpha = (phase === "index" ? 0.55 : 0.55 * (1 - ease) + 0.2) * flicker.opacity(`ph:${i}`, now);
         g.fillRect(x - 2, y - 2, 4, 4);
@@ -262,10 +270,10 @@ function heroMap() {
     g.restore();
 
     g.strokeStyle = INK; g.lineWidth = 1;
-    g.beginPath(); g.arc(W, H, R - 1, 0, Math.PI * 2); g.stroke();
+    g.beginPath(); g.arc(C.x, C.y, R - 1, 0, Math.PI * 2); g.stroke();
     if (phase === "index") {
       g.lineWidth = 3;
-      g.beginPath(); g.arc(W, H, R - 2, -Math.PI / 2, -Math.PI / 2 - frac * Math.PI / 2, true); g.stroke();
+      g.beginPath(); g.arc(C.x, C.y, R - 2, -Math.PI / 2, -Math.PI / 2 - frac * Math.PI / 2, true); g.stroke();
     }
 
     status.style.setProperty("--p", frac.toFixed(3));
