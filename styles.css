@@ -43,7 +43,7 @@ p { margin: 0 0 14px; color: var(--ink); max-width: 56ch; }
 /* Nav */
 .nav.light { background: none; }
 .nav { position: absolute; inset: 0 0 auto 0; max-width: 1920px; margin: 0 auto; z-index: 3; display: flex; align-items: center; justify-content: space-between; padding: 24px var(--gutter); }
-.brand img { display: block; height: 26px; width: auto; }
+.brand img { display: block; height: 32px; width: auto; }
 .nav nav { display: flex; gap: 28px; }
 .nav nav a { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; text-transform: uppercase; text-decoration: none; color: var(--dim); transition: color 150ms ease; }
 .nav nav a:hover, .nav nav a:focus-visible { color: var(--ink); }
