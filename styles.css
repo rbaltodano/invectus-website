@@ -319,7 +319,8 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 
 /* Stack the copy and full-width maps on tablets and phones. */
 @media (max-width: 1024px) {
-  .hero { height: auto; min-height: 0; padding-bottom: 100vw; }
+  /* Show 70% of the 120vw hero circle; the rest extends below the section. */
+  .hero { height: auto; min-height: 0; padding-bottom: 84vw; }
   .hero-copy { max-width: none; padding-top: 120px; }
   .hero-note { position: relative; left: auto; bottom: auto; margin: 0 var(--gutter) 32px; max-width: 64ch; }
   .verdicts .search-demo { grid-template-columns: minmax(0, 1fr); }

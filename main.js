@@ -133,9 +133,10 @@ function heroMap() {
     const rect = hero.getBoundingClientRect();
     W = rect.width; H = rect.height;
     if (W <= 1024) {
-      // On tablet and mobile, the full circle follows the copy and its real-data note.
-      R = W / 2;
-      C = { x: W / 2, y: H - R };
+      // A 120vw circle bleeds 10vw off each side; crop its bottom 30%.
+      // CSS reserves 84vw (70% of the diameter) below the real-data note.
+      R = W * 0.6;
+      C = { x: W / 2, y: H - R + R * 2 * 0.3 };
       A = { ...C };
       fit.k = (R * 1.72) / fit.extent;
     } else {
