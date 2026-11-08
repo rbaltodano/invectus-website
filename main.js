@@ -755,129 +755,12 @@ function searchDemo() {
   io.observe(root.querySelector(".search-box"));
 }
 
-/* ---------- Closing section: bookend circle, cursor as a query, copy burst ----------
-   The hero's circle returns with its centre at the section's top-left, so its lower-right
-   quarter sits behind the copy. The mouse becomes the app's search crosshair: the three nearest
-   squares light up with lines, and the closest paper's title shows (map distance only, so no
-   scores). Copying the command sends a burst of squares into the install box. */
-function getMap() {
-  const section = document.querySelector(".get"), canvas = section?.querySelector(".get-map"), D = window.INVECTUS_MAP;
-  if (!canvas || !D) return;
-  const g = canvas.getContext("2d"), flicker = new DotFlicker();
-  const css = getComputedStyle(section), tok = (n, f) => css.getPropertyValue(n).trim() || f;
-  const ink = tok("--ink", "#1b1a18"), accent = tok("--accent", "#12895a"), bg = tok("--bg", "#ebe7e0");
-  const inkA = (a) => `rgba(${tok("--ink-rgb", "27, 26, 24")}, ${a})`;
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-  for (const [x, y] of D.points) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-  const fit = { cx: (x0 + x1) / 2, cy: (y0 + y1) / 2, extent: Math.max(x1 - x0, y1 - y0) };
-  let W = 0, H = 0, R = 0, cells = [], mouse = null, shown = false, frame, bursts = [], copy = { l: 0, t: 0, rt: 0, b: 0 };
-  const underCopy = (x, y) => x > copy.l - 28 && x < copy.rt + 28 && y > copy.t - 20 && y < copy.b + 20;
-  const inside = (x, y, pad = 0) => x * x + y * y <= (R - pad) ** 2;
-
-  function layout() {
-    const r = section.getBoundingClientRect();
-    W = r.width; H = r.height;
-    if (!W || !H) return;
-    // The rim passes outside the copy (it never cuts through the text); squares under the copy
-    // stay faint so it reads first.
-    const kids = [...section.querySelectorAll(".get-center > *")].map((el) => el.getBoundingClientRect());
-    copy = kids.reduce((a, b) => ({ l: Math.min(a.l, b.left - r.left), t: Math.min(a.t, b.top - r.top), rt: Math.max(a.rt, b.right - r.left), b: Math.max(a.b, b.bottom - r.top) }), { l: Infinity, t: Infinity, rt: -Infinity, b: -Infinity });
-    R = Math.min(Math.hypot(W, H) * 0.95, Math.max(Math.hypot(W, H) * 0.5, Math.hypot(copy.rt, copy.b) + 56));
-    const k = (R * 0.86) / fit.extent * 1.15, ax = R * 0.5, ay = R * 0.5;
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
-    g.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const CELL = HERO_CELL, cols = Math.ceil(W / CELL) + 2, grid = new Map();
-    D.points.forEach(([px, py, , , , t]) => {
-      const x = ax + (px - fit.cx) * k, y = ay + (py - fit.cy) * k;
-      if (x < -8 || y < -8 || x > W + 8 || y > H + 8 || !inside(x, y, 4)) return;
-      const key = Math.floor(y / CELL) * cols + Math.floor(x / CELL), c = grid.get(key);
-      if (c) { c.x += x; c.y += y; c.n++; } else grid.set(key, { x, y, n: 1, t });
-    });
-    cells = [...grid.values()].map((c, i) => ({ x: c.x / c.n, y: c.y / c.n, n: c.n, t: c.t, key: `g:${i}` }));
-    if (shown) flicker.sync(cells.map((c) => c.key), performance.now());
-    draw();
-  }
-
-  function draw() {
-    cancelAnimationFrame(frame);
-    const now = performance.now();
-    g.clearRect(0, 0, W, H);
-    // The rim and the squares, faint so the copy stays first.
-    g.strokeStyle = inkA(0.35); g.lineWidth = 1;
-    g.beginPath(); g.arc(0, 0, R - 1, 0, Math.PI * 2); g.stroke();
-    g.fillStyle = ink;
-    for (const c of cells) {
-      const s = heroSide(c.n);
-      g.globalAlpha = (underCopy(c.x, c.y) ? 0.05 : c.n === 1 ? 0.16 : 0.26) * (shown ? flicker.opacity(c.key, now) : 0);
-      g.fillRect(c.x - s / 2, c.y - s / 2, s, s);
-    }
-    g.globalAlpha = 1;
-    // The cursor as a query: crosshair, lines to the three nearest squares, the closest title.
-    if (mouse && inside(mouse.x, mouse.y)) {
-      const near = cells.map((c) => ({ c, d: (c.x - mouse.x) ** 2 + (c.y - mouse.y) ** 2 })).sort((a, b) => a.d - b.d).slice(0, 3);
-      g.strokeStyle = accent; g.lineWidth = 1; g.setLineDash([3, 4]);
-      for (const { c } of near) { g.beginPath(); g.moveTo(mouse.x, mouse.y); g.lineTo(c.x, c.y); g.stroke(); }
-      g.setLineDash([]); g.fillStyle = accent;
-      for (const { c } of near) { const s = heroSide(c.n) + 3; g.fillRect(c.x - s / 2, c.y - s / 2, s, s); }
-      g.shadowColor = accent; g.shadowBlur = 14; g.strokeStyle = accent; g.lineWidth = 1.5;
-      g.beginPath(); g.moveTo(mouse.x - 8, mouse.y); g.lineTo(mouse.x + 8, mouse.y); g.moveTo(mouse.x, mouse.y - 8); g.lineTo(mouse.x, mouse.y + 8); g.stroke();
-      g.shadowBlur = 0;
-      const title = D.titles[near[0]?.c.t] ?? "";
-      if (title) {
-        g.font = `400 12px "Inter Variable", Inter, sans-serif`; g.textBaseline = "middle";
-        const label = title.length > 64 ? `${title.slice(0, 62)}…` : title, tw = g.measureText(label).width;
-        const lx = Math.min(mouse.x + 14, W - tw - 16), ly = mouse.y + 18;
-        g.fillStyle = bg; g.globalAlpha = 0.85; g.fillRect(lx - 6, ly - 10, tw + 12, 20); g.globalAlpha = 1;
-        g.fillStyle = ink; g.fillText(label, lx, ly);
-      }
-    }
-    // Copy burst: squares glide into the install box and fade.
-    let busy = flicker.pending(now);
-    bursts = bursts.filter((b) => now < b.t0 + b.ms + b.delay);
-    for (const b of bursts) {
-      const p = Math.max(0, Math.min(1, (now - b.t0 - b.delay) / b.ms)), e = p * p * (3 - 2 * p);
-      g.globalAlpha = p === 0 ? 0 : 1 - p * p;
-      g.fillStyle = b.mint ? accent : ink;
-      g.fillRect(b.x + (b.tx - b.x) * e - 2, b.y + (b.ty - b.y) * e - 2, 4, 4);
-      busy = true;
-    }
-    g.globalAlpha = 1;
-    if (busy) frame = requestAnimationFrame(draw);
-  }
-
-  section.addEventListener("pointermove", (e) => {
-    if (e.pointerType !== "mouse" || reduced) return;
-    const r = section.getBoundingClientRect(); mouse = { x: e.clientX - r.left, y: e.clientY - r.top }; draw();
-  });
-  section.addEventListener("pointerleave", () => { mouse = null; draw(); });
-  section.addEventListener("copied", () => {
-    if (reduced || !cells.length) return;
-    const r = section.getBoundingClientRect(), box = section.querySelector(".install").getBoundingClientRect();
-    const tx = box.left - r.left + box.width / 2, ty = box.top - r.top + box.height / 2, now = performance.now();
-    for (let i = 0; i < 48; i++) {
-      const c = cells[Math.floor(Math.random() * cells.length)];
-      bursts.push({ x: c.x, y: c.y, tx: tx + (Math.random() - 0.5) * box.width * 0.6, ty: ty + (Math.random() - 0.5) * 12, t0: now, delay: Math.random() * 220, ms: 420 + Math.random() * 200, mint: i % 3 === 0 });
-    }
-    draw();
-  });
-  new IntersectionObserver((entries, io) => {
-    if (!entries.some((e) => e.isIntersecting)) return;
-    io.disconnect(); shown = true; flicker.sync(cells.map((c) => c.key), performance.now()); draw();
-  }, { threshold: 0.2 }).observe(section);
-  let t;
-  new ResizeObserver(() => { clearTimeout(t); t = setTimeout(layout, 100); }).observe(section);
-  layout();
-}
-
 /* ---------- Copy the install command ---------- */
 function copyButtons() {
   document.querySelectorAll(".copy[data-copy]").forEach((b) => b.addEventListener("click", async () => {
     try { await navigator.clipboard.writeText(b.dataset.copy); } catch { return; }
-    b.dispatchEvent(new CustomEvent("copied", { bubbles: true }));
-    // The check lands with the squares that stream into the box (getMap).
-    setTimeout(() => { b.classList.add("done"); b.setAttribute("aria-label", "Copied"); }, reduced ? 0 : 650);
-    setTimeout(() => { b.classList.remove("done"); b.setAttribute("aria-label", "Copy command"); }, reduced ? 1600 : 2400);
+    b.classList.add("done"); b.setAttribute("aria-label", "Copied");
+    setTimeout(() => { b.classList.remove("done"); b.setAttribute("aria-label", "Copy command"); }, 1600);
   }));
 }
 
@@ -956,7 +839,6 @@ heroMap();
 agentChat();
 searchDemo();
 copyButtons();
-getMap();
 footerMark();
 downloadButton();
 reveals();

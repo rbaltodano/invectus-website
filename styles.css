@@ -338,10 +338,3 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .c-chip { font-family: var(--sans); font-size: 12px; letter-spacing: 0; }
 .c-chip b { font-family: var(--sans); }
 .c-think .c-avatar { margin-top: -6px; }
-
-/* Closing section: the hero's circle mirrored (centre at the top-left), the cursor as a search
-   crosshair over it, and squares streaming into the install box on copy (main.js getMap). */
-.get { overflow: hidden; }
-.get-map { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0; }
-.get .get-center { position: relative; z-index: 1; }
-.get .install { position: relative; box-shadow: 0 10px 30px rgba(27, 26, 24, 0.06); }
