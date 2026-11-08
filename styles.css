@@ -378,3 +378,9 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .space { background: #000; }
 .get-earth { width: max(1300px, 118%); mix-blend-mode: normal; -webkit-mask-image: none; mask-image: none; }
 @media (max-width: 760px) { .get-earth { width: 1000px; } }
+/* Stacking inside the space background: photo (0) < stars (2) < copy and footer (3) < star card (4). */
+.space { isolation: isolate; }
+.get-earth { z-index: 0; }
+.get-stars { z-index: 2; }
+.get, .get .get-center, .foot { z-index: 3; }
+.star-tip { z-index: 4; }
