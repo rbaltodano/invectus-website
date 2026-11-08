@@ -197,17 +197,16 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .mark { flex: none; display: block; }
 .mark.openai { color: var(--ink); }
 .suggestion { position: relative; border: 1px dashed var(--line-2); border-radius: var(--r); padding: 16px; }
-.sugg-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
-.tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line-2); border-radius: var(--r); padding: 2px 6px; }
-.attr-wrap { display: inline-flex; flex-direction: column; align-items: flex-end; gap: 4px; }
-.agent-attribution { display: inline-flex; align-items: center; gap: 6px; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; font-size: 12px; cursor: pointer; }
+.sugg-head { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.tag { flex: none; white-space: nowrap; font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); border: 1px solid var(--line-2); border-radius: var(--r); padding: 2px 6px; }
+.attr-wrap { display: inline-flex; flex-direction: column; align-items: flex-start; max-width: 100%; gap: 4px; }
+.agent-attribution { display: inline-flex; align-items: center; justify-content: flex-start; text-align: left; gap: 6px; padding: 0; border: 0; background: none; color: var(--dim); font: inherit; font-size: 12px; cursor: pointer; }
 .agent-attribution:hover, .agent-attribution[aria-expanded="true"] { color: var(--ink); }
 .sugg-title { margin: 0 0 4px; font-size: 14px; }
 .sugg-title .code { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--dim); margin-right: 8px; }
 .sugg-verdict { display: inline-flex; align-items: center; gap: 8px; margin: 0 0 8px; font-size: 13px; }
 .sugg-verdict::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--ink); }
-.sugg-note { font-size: 13px; color: var(--dim); margin-bottom: 16px; }
-.sugg-actions { display: flex; gap: 8px; }
+.sugg-note { font-size: 13px; color: var(--dim); margin-bottom: 0; }
 .btn.small { min-height: 30px; padding: 4px 12px; font-size: 13px; }
 /* In the app it floats under the attribution; here it sits below the card so both stay readable. */
 .model-popover { position: relative; margin: 20px 0 0 auto; width: 280px; max-width: 100%; border: 1px solid var(--line-2); border-radius: var(--r); background: var(--surface); box-shadow: 0 8px 24px #0005; transform-origin: top right; }
