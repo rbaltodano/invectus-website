@@ -119,11 +119,6 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 @media (max-width: 760px) { .ranks { grid-template-columns: 1fr; } }
 
 /* Features: the app screenshot beside the four points. */
-.feature-split { display: grid; grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); gap: clamp(32px, 5vw, 72px); align-items: center; margin-top: 40px; }
-.feature-shot { margin: 0; }
-.feature-shot img.mac-shot { display: block; width: 108%; max-width: none; height: auto; margin: 0 -4%; }
-.feature-split .ranks { grid-template-columns: 1fr; margin: 0; }
-@media (max-width: 960px) { .feature-split { grid-template-columns: 1fr; } }
 
 /* inVectus search, interactive: precomputed real checks, results on the map. */
 .verdict-intro { max-width: 640px; }
@@ -401,7 +396,7 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .hero-gaps li:hover .code, .hero-gaps li:focus-visible .code, .hero-gaps li.on .code { color: var(--accent); }
 .hero-gaps li:hover .score, .hero-gaps li.on .score { color: var(--ink); }
 .hero-gaps li:focus-visible { outline: none; }
-@media (max-width: 1024px), (max-height: 860px) { .hero-gaps { display: none; } }
+@media (max-width: 1024px), (max-height: 840px) { .hero-gaps { display: none; } }
 .rim-trail { position: absolute; left: 0; top: 0; width: 100%; height: 150px; pointer-events: none; z-index: 0; }
 #features .wrap { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .hero-gaps li { animation: none; opacity: 1; } }
@@ -410,3 +405,35 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
    area and the bottom overscroll show black instead of a grey band. Sections paint their own. */
 html { background: #000; }
 body { background: transparent; }
+
+/* Features as a scroll-through story: the app window stays pinned while the four steps scroll
+   past; each step crossfades the window to its real screen (main.js featureStory). */
+.story { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(40px, 6vw, 96px); margin-top: 48px; }
+.story-stage { position: sticky; top: max(24px, calc(50vh - 22vw)); align-self: start; margin: 0; aspect-ratio: 1800 / 1170; }
+.story-stage img { position: absolute; top: 0; height: auto; opacity: 0; transform: scale(0.985); transition: opacity 500ms ease, transform 700ms var(--spring-relaxed); pointer-events: none; }
+.story-stage img.mac-shot { left: -4%; width: 108%; max-width: none; margin: 0; }
+.story-stage img.flat { left: 0; width: 100%; top: 2%; border-radius: 10px; box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45); }
+.story-stage img.on { opacity: 1; transform: none; pointer-events: auto; }
+.story-steps { list-style: none; margin: 0; padding: 0 0 0 28px; position: relative; border-left: 1px solid var(--line); }
+.story-steps::before { content: ""; position: absolute; left: -1px; top: 0; width: 1px; height: calc(var(--progress, 0) * 100%); background: var(--ink); transition: height 500ms var(--spring-relaxed); }
+.story-step { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.3; transition: opacity 400ms ease; }
+.story-step:first-child { min-height: 50vh; justify-content: flex-start; padding-top: 12vh; }
+.story-step:last-child { min-height: 60vh; }
+.story-step.on { opacity: 1; }
+.story-step .code { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 10px; }
+.story-step.on .code { color: var(--accent); }
+.story-step h3 { font-size: clamp(20px, 2vw, 26px); font-weight: 300; letter-spacing: -0.01em; margin-bottom: 10px; }
+.story-step p { color: var(--dim); margin: 0; }
+.story-step .step-shot { display: none; }
+@media (max-width: 900px) {
+  .story { grid-template-columns: 1fr; }
+  .story-stage { display: none; }
+  .story-steps { padding: 0; border: 0; }
+  .story-steps::before { display: none; }
+  .story-step, .story-step:first-child, .story-step:last-child { min-height: 0; padding: 0 0 56px; opacity: 1; }
+  .story-step .step-shot { display: block; width: 108%; max-width: none; margin: 20px -4% 0; height: auto; }
+  .story-step .step-shot.flat { width: 100%; margin: 24px 0 0; border-radius: 8px; }
+}
+@media (prefers-reduced-motion: reduce) { .story-stage img { transition: none; transform: none; } }
+#features .wrap { max-width: 1480px; }
+@media (min-width: 901px) { .story { grid-template-columns: minmax(0, 8fr) minmax(0, 4fr); } .story-stage { top: var(--stage-top, 15vh); } }

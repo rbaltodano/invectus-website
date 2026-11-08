@@ -387,7 +387,7 @@ function heroMap() {
   // The app's ranked gap list beside the map: hover a row to light its ring, click to open it.
   const list = hero.querySelector(".hero-gaps");
   if (list) {
-    list.innerHTML = gaps.slice(0, 5).map((gp, i) => `<li tabindex="0" style="--i:${i}" data-i="${i}"><span class="code">${gp.code}</span><span class="label">${esc(gp.label)}</span><span class="score">${gp.score.toFixed(2)}</span></li>`).join("");
+    list.innerHTML = gaps.slice(0, 3).map((gp, i) => `<li tabindex="0" style="--i:${i}" data-i="${i}"><span class="code">${gp.code}</span><span class="label">${esc(gp.label)}</span><span class="score">${gp.score.toFixed(2)}</span></li>`).join("");
     const row = (e) => e.target.closest("li");
     list.addEventListener("pointerover", (e) => { const li = row(e); if (!li || pinned) return; hover = { gap: gaps[+li.dataset.i] }; draw(); });
     list.addEventListener("pointerleave", () => { if (!pinned) { hover = undefined; draw(); } });
@@ -632,6 +632,28 @@ function rimTrail() {
   }
   addEventListener("herocircle", (e) => { circle = e.detail; requestAnimationFrame(draw); });
   new ResizeObserver(() => requestAnimationFrame(draw)).observe(section);
+}
+
+/* ---------- Features story: crossfade the pinned app window as each step reaches the middle ---------- */
+function featureStory() {
+  const story = document.querySelector(".story");
+  if (!story) return;
+  const steps = [...story.querySelectorAll(".story-step")], shots = [...story.querySelectorAll(".story-stage img")];
+  const list = story.querySelector(".story-steps");
+  const set = (i) => {
+    steps.forEach((st, k) => st.classList.toggle("on", k === i));
+    shots.forEach((im, k) => im.classList.toggle("on", k === i));
+    list.style.setProperty("--progress", ((i + 1) / steps.length).toFixed(3));
+  };
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) if (e.isIntersecting) set(+e.target.dataset.i);
+  }, { rootMargin: "-45% 0px -45% 0px" });
+  steps.forEach((st) => io.observe(st));
+  set(0);
+  // Pin the window centred in the viewport.
+  const stage = story.querySelector(".story-stage");
+  const centre = () => stage.style.setProperty("--stage-top", `${Math.max(24, (innerHeight - stage.offsetHeight) / 2)}px`);
+  addEventListener("resize", centre); centre();
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */
@@ -1130,6 +1152,7 @@ function reveals() {
 }
 
 rimTrail();
+featureStory();
 heroMap();
 agentChat();
 searchDemo();
