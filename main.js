@@ -786,6 +786,7 @@ function getStars() {
   const fit = { x0, y0, x1, y1 };
   const regionById = new Map(D.regions.map((r) => [r.id, r]));
   let sky = { ax: 0, ay: 0, sx: 1, sy: 1 }, pinned = null;
+  const SPREAD = 2.6;
   // The Earth's horizon in the photo (top of the atmosphere glow), as a share of image height at
   // each 5% of its width, measured from assets/earth.jpg. No star is drawn below it.
   const HORIZON = [0.198, 0.203, 0.211, 0.221, 0.232, 0.242, 0.255, 0.275, 0.298, 0.322, 0.345, 0.374, 0.406, 0.439, 0.474, 0.512, 0.55, 0.592, 0.636, 0.683, 0.73];
@@ -816,9 +817,15 @@ function getStars() {
     // so the collection's clusters read as constellations. sky maps map coords to canvas px.
     const skyH = Math.max(200, (Number.isFinite(footTop) ? footTop : H) - 40);
     sky = { ax: W * 0.02, ay: skyH * 0.03, sx: (W * 0.96) / (fit.x1 - fit.x0), sy: (skyH * 0.94) / (fit.y1 - fit.y0) };
-    for (let i = 0; i < COUNT * 3 && stars.length < COUNT; i++) {
+    const jitter = (fit.x1 - fit.x0) * 0.025, MIN_GAP = W < 760 ? 10 : 16;
+    for (let i = 0; i < COUNT * 4 && stars.length < COUNT; i++) {
       const p = D.points[Math.floor(rand() * D.points.length)];
-      const x = sky.ax + (p[0] - fit.x0) * sky.sx, y = sky.ay + (p[1] - fit.y0) * sky.sy;
+      // Spread each cluster out around its region's centre (SPREAD×) so stars don't clump;
+      // the region outline scales by the same amount, so it still bounds its stars.
+      const reg = regionById.get(p[2]), cx = reg ? reg.x : p[0], cy = reg ? reg.y : p[1];
+      const mx = cx + (p[0] - cx) * SPREAD + (rand() - 0.5) * jitter, my = cy + (p[1] - cy) * SPREAD + (rand() - 0.5) * jitter;
+      const x = sky.ax + (mx - fit.x0) * sky.sx, y = sky.ay + (my - fit.y0) * sky.sy;
+      if (stars.some((o) => (o.x - x) ** 2 + (o.y - y) ** 2 < MIN_GAP * MIN_GAP)) continue; // keep a minimum spacing
       const depth = DEPTHS[rand() < 0.2 ? 0 : rand() < 0.45 ? 1 : 2];
       // Near stars keep clear of the copy; faint far ones may sit closer to it.
       const pad = depth === DEPTHS[0] ? 24 : 8;
@@ -851,7 +858,7 @@ function getStars() {
       if (reg) {
         const cx = sky.ax + (reg.x - fit.x0) * sky.sx, cy = sky.ay + (reg.y - fit.y0) * sky.sy + dy;
         g.setLineDash([3, 4]); g.lineWidth = 1; g.strokeStyle = "rgba(209, 203, 194, 0.45)";
-        g.beginPath(); g.ellipse(cx, cy, Math.max(8, reg.radius * sky.sx), Math.max(8, reg.radius * sky.sy), 0, 0, Math.PI * 2); g.stroke();
+        g.beginPath(); g.ellipse(cx, cy, Math.max(8, reg.radius * SPREAD * sky.sx), Math.max(8, reg.radius * SPREAD * sky.sy), 0, 0, Math.PI * 2); g.stroke();
         g.setLineDash([]);
       }
       g.strokeStyle = "#6edcaa"; g.lineWidth = 1.5;
