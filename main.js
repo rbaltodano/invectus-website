@@ -458,18 +458,19 @@ function shimmer(el) {
 }
 
 /* ---------- Model picker (src/AgentAttribution.tsx + src/ModelSelector.tsx) ----------
-   The suggestion's author stays fixed; choosing a model sets the preference for future work
-   ("Next: …"); the switch goes back to following the agent's current model. */
+   Preview the selected model immediately; following the agent restores its current model. */
 function modelPicker() {
   const root = document.querySelector(".app-window");
   if (!root) return;
   const trigger = root.querySelector(".agent-attribution"), pop = root.querySelector(".model-popover");
   const selector = pop.querySelector(".model-selector"), sw = pop.querySelector(".model-current-switch");
-  const next = root.querySelector(".next-model"), options = [...pop.querySelectorAll(".model-option")];
-  let last = "Claude Opus 5.5 Medium", preferred = null;
+  const label = trigger.querySelector("span"), mark = trigger.querySelector(".mark");
+  const options = [...pop.querySelectorAll(".model-option")];
+  const currentModel = label.textContent.trim();
+  let preferred = null;
   const check = '<svg width="14" height="14" aria-hidden="true"><use href="#i-check"/></svg>';
   function render() {
-    const value = preferred ?? last;
+    const value = preferred ?? currentModel;
     for (const o of options) {
       const on = o.textContent.trim() === value;
       o.setAttribute("aria-pressed", String(on));
@@ -478,10 +479,17 @@ function modelPicker() {
     }
     selector.dataset.followCurrent = String(!preferred);
     sw.setAttribute("aria-checked", String(!preferred));
-    next.hidden = !preferred; next.textContent = preferred ? `Next: ${preferred}` : "";
+    label.textContent = value;
+    trigger.setAttribute("aria-label", `${value}; choose model`);
+    const selected = options.find((o) => o.textContent.trim() === value);
+    const openai = selected.closest(".model-provider").getAttribute("aria-label") === "ChatGPT";
+    mark.classList.toggle("openai", openai);
+    mark.querySelector("use").setAttribute("href", openai ? "#mark-openai" : "#mark-claude");
   }
-  options.forEach((o) => o.addEventListener("click", () => { preferred = last = o.textContent.trim(); render(); }));
-  sw.addEventListener("click", () => { preferred = preferred ? null : last; render(); });
+  options.forEach((o) => o.addEventListener("click", () => {
+    preferred = o.textContent.trim(); render(); setOpen(false); trigger.focus();
+  }));
+  sw.addEventListener("click", () => { preferred = preferred ? null : currentModel; render(); });
   pop.querySelectorAll(".model-provider-heading").forEach((h) => h.addEventListener("click", () => {
     const open = h.getAttribute("aria-expanded") !== "true";
     h.setAttribute("aria-expanded", String(open)); h.nextElementSibling.hidden = !open;
