@@ -405,3 +405,4 @@ main > section.fold { padding-bottom: clamp(48px, 7vw, 96px); }
 .rim-trail { position: absolute; left: 0; top: 0; width: 100%; height: 150px; pointer-events: none; z-index: 0; }
 #features .wrap { position: relative; z-index: 1; }
 @media (prefers-reduced-motion: reduce) { .hero-gaps li { animation: none; opacity: 1; } }
+@media (max-width: 760px) { .foot { margin: 0; border-radius: 0; border-left: 0; border-right: 0; border-bottom: 0; } }
