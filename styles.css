@@ -408,7 +408,7 @@ body { background: transparent; }
 
 /* Features as a scroll-through story: the app window stays pinned while the four steps scroll
    past; each step crossfades the window to its real screen (main.js featureStory). */
-.story { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: clamp(40px, 6vw, 96px); margin-top: 48px; }
+.story { --story-gap: clamp(40px, 6vw, 96px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: var(--story-gap); margin-top: 48px; }
 .story-steps { list-style: none; margin: 0; padding: 0 0 0 28px; position: relative; border-left: 1px solid var(--line); }
 .story-steps::before { content: ""; position: absolute; left: -1px; top: 0; width: 1px; height: calc(var(--progress, 0) * 100%); background: var(--ink); transition: height 500ms var(--spring-relaxed); }
 .story-step { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.3; transition: opacity 400ms ease; }
@@ -429,7 +429,10 @@ body { background: transparent; }
 #features .wrap { max-width: 1480px; }
 @media (min-width: 901px) {
   .story { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-areas: "steps window"; }
-  .story-steps { grid-area: steps; }
+  .story-steps { grid-area: steps; padding: 0; border-left: 0; }
+  .story-steps::before, .story-steps::after { left: auto; right: calc(var(--story-gap) / -2); }
+  .story-steps::before { z-index: 1; }
+  .story-steps::after { content: ""; position: absolute; top: 0; width: 1px; height: 100%; background: var(--line); }
   .story-stage { grid-area: window; top: var(--stage-top, 15vh); }
 }
 
