@@ -734,7 +734,12 @@ function featureStory() {
   steps.forEach((st) => io.observe(st));
   set(0);
   const stage = story.querySelector(".story-stage");
-  const centre = () => { if (current >= 0) morph(current); stage.style.setProperty("--stage-top", `${Math.max(24, (innerHeight - stage.offsetHeight) / 2)}px`); };
+  const centre = () => {
+    if (current >= 0) morph(current);
+    const space = innerHeight - stage.offsetHeight;
+    const top = Math.max(24, Math.min(space / 2 + 48, space - 24));
+    stage.style.setProperty("--stage-top", `${top}px`);
+  };
   addEventListener("resize", centre); (document.fonts?.ready ?? Promise.resolve()).then(centre); centre();
 }
 
