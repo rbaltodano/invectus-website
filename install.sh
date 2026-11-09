@@ -1,5 +1,5 @@
 #!/bin/sh
-# inVectus installer: macOS on Apple Silicon (preview). Windows and Linux: build from source.
+# inVectus installer: macOS on M1 or newer (Apple Silicon, preview). Windows and Linux: build from source.
 #
 #   curl -fsSL https://invectus.app/install.sh | sh
 #
@@ -26,7 +26,7 @@ say() { printf '%s\n' "$*"; }
 fail() { printf 'inVectus install: %s\n' "$*" >&2; exit 1; }
 
 [ "$(uname -s)" = "Darwin" ] || fail "this preview installer is macOS only. Build from source: https://github.com/$REPO#build-from-source"
-[ "$(uname -m)" = "arm64" ] || fail "this preview is built for Apple Silicon (arm64) only. Build from source: https://github.com/$REPO#build-from-source"
+[ "$(uname -m)" = "arm64" ] || fail "this preview is built for Macs with an M1 or newer chip (Apple Silicon, arm64); Intel Macs are not supported yet. Build from source: https://github.com/$REPO#build-from-source"
 for tool in curl shasum tar; do command -v "$tool" >/dev/null 2>&1 || fail "needs $tool"; done
 
 if [ -n "${INVECTUS_DOWNLOAD_BASE:-}" ]; then
@@ -81,4 +81,4 @@ say "  2. Install an embedding model (about 134 MB) when the app asks, or run:"
 say "       invectus models download bge-small-en-v1.5"
 say "  3. Optional: connect an AI agent, e.g. invectus connect add claude-code"
 say ""
-say "This is a preview: unsigned, Apple Silicon only, tested on one Mac."
+say "This is a preview: unsigned, M1 or newer only, tested on one Mac."
