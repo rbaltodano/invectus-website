@@ -739,11 +739,15 @@ function featureStory() {
 
 /* ---------- Download button: name the visitor's platform ---------- */
 function downloadButton() {
-  const label = document.querySelector("#download .download-label");
+  // macOS: the button jumps to the install command. Other systems have no installer yet, so it
+  // says so and links to the build-from-source steps (no unverified platform claims).
+  const btn = document.querySelector("#download"), label = btn?.querySelector(".download-label");
   if (!label) return;
   const p = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
-  const name = /mac|iphone|ipad/.test(p) ? "macOS" : /win/.test(p) ? "Windows" : /linux|x11|cros/.test(p) ? "Linux" : null;
-  if (name) label.textContent = `Download for ${name}`;
+  if (/mac|iphone|ipad/.test(p)) { label.textContent = "Download for macOS"; return; }
+  label.textContent = "Build from source";
+  btn.href = "https://github.com/rbaltodano/inVectus#build-from-source";
+  btn.target = "_blank"; btn.rel = "noopener";
 }
 
 /* ---------- inVectus search example: real precomputed checks, nearest papers on the map ---------- */
