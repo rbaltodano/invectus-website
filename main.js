@@ -733,14 +733,8 @@ function featureStory() {
   }, { rootMargin: "-45% 0px -45% 0px" });
   steps.forEach((st) => io.observe(st));
   set(0);
-  const stage = story.querySelector(".story-stage");
-  const centre = () => {
-    if (current >= 0) morph(current);
-    const space = innerHeight - stage.offsetHeight;
-    const top = Math.max(24, Math.min(space / 2 + 48, space - 24));
-    stage.style.setProperty("--stage-top", `${top}px`);
-  };
-  addEventListener("resize", centre); (document.fonts?.ready ?? Promise.resolve()).then(centre); centre();
+  const refresh = () => { if (current >= 0) morph(current); };
+  addEventListener("resize", refresh); (document.fonts?.ready ?? Promise.resolve()).then(refresh); refresh();
 }
 
 /* ---------- Download button: name the visitor's platform ---------- */

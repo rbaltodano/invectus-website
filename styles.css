@@ -418,11 +418,11 @@ body { background: transparent; }
   .story-steps::before, .story-steps::after { left: auto; right: calc(var(--story-gap) / -2); }
   .story-steps::before { z-index: 1; }
   .story-steps::after { content: ""; position: absolute; top: 0; width: 1px; height: 100%; background: var(--line); }
-  .story-stage { grid-area: window; top: var(--stage-top, calc(15vh + 48px)); }
+  .story-stage { grid-area: window; top: 48px; }
 }
 
 /* Story mockups: pieces of the app rebuilt 1:1 in HTML (the app's light palette and type). */
-.story-stage { position: sticky; top: var(--stage-top, calc(15vh + 48px)); align-self: start; display: grid; }
+.story-stage { position: sticky; top: 48px; align-self: start; display: grid; }
 .story-stage .mock { grid-area: 1 / 1; align-self: center; opacity: 0; transform: translateY(10px) scale(0.99); transition: opacity 450ms ease, transform 600ms var(--spring-relaxed); pointer-events: none; }
 .story-stage .mock.on { opacity: 1; transform: none; pointer-events: auto; }
 .story-step .step-mock { display: none; }
