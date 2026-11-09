@@ -521,7 +521,7 @@ function heroMap() {
 function agentChat() {
   const root = document.querySelector(".chat");
   if (!root) return;
-  const log = root.querySelector(".chat-log"), wire = document.querySelector(".wire");
+  const log = root.querySelector(".chat-log");
   const STEPS = [
     { user: "Which topics have plenty of studies but no reviews yet?" },
     { bot: "chatgpt", name: "ChatGPT", mark: "#mark-openai", tool: "list_gaps",
@@ -544,7 +544,6 @@ function agentChat() {
   let timers = [], index = 0, visible = false, running = false;
   const later = (ms, fn) => timers.push(setTimeout(fn, ms));
   const add = (cls, html) => { const li = document.createElement("li"); li.className = cls; li.innerHTML = html; log.appendChild(li); return li; };
-  const pulse = (dir) => { if (!wire || reduced) return; wire.classList.remove("out", "back"); void wire.offsetWidth; wire.classList.add(dir); };
   // Wrap every word in a span so the answer fades in word by word (tags like <b> are kept).
   function wordify(el) {
     let i = 0;
@@ -593,8 +592,8 @@ function agentChat() {
       think = add("c-think", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${a.mark}"/></svg></span><span class="c-think-text"></span>`);
       say(a.think[0]);
     });
-    later(1500, () => { say(a.think[1]); pulse("out"); });
-    later(2400, () => { say(a.think[2]); pulse("back"); });
+    later(1500, () => { say(a.think[1]); });
+    later(2400, () => { say(a.think[2]); });
     later(3300, () => { clearInterval(ticker); think?.remove(); answer(a); });
     later(9300, () => log.classList.add("leaving"));
     later(9800, () => {
