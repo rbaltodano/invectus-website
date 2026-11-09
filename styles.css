@@ -411,14 +411,14 @@ body { background: transparent; }
 .story { --story-gap: clamp(40px, 6vw, 96px); display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: var(--story-gap); margin-top: 48px; }
 .story-steps { list-style: none; margin: 0; padding: 0 0 0 28px; position: relative; border-left: 1px solid var(--line); }
 .story-steps::before { content: ""; position: absolute; left: -1px; top: 0; width: 1px; height: calc(var(--progress, 0) * 100%); background: var(--ink); transition: height 500ms var(--spring-relaxed); }
-.story-step { min-height: 70vh; display: flex; flex-direction: column; justify-content: center; opacity: 0.3; transition: opacity 400ms ease; }
+.story-step { min-height: 70vh; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0.3; transition: opacity 400ms ease; }
 .story-step:first-child { min-height: 50vh; justify-content: flex-start; padding-top: 12vh; }
 .story-step:last-child { min-height: 60vh; }
 .story-step.on { opacity: 1; }
 .story-step .code { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.12em; color: var(--dim); margin-bottom: 10px; }
 .story-step.on .code { color: var(--accent); }
-.story-step h3 { font-size: clamp(20px, 2vw, 26px); font-weight: 300; letter-spacing: -0.01em; margin-bottom: 10px; }
-.story-step p { color: var(--dim); margin: 0; }
+.story-step h3 { text-align: center; font-size: clamp(20px, 2vw, 26px); font-weight: 300; letter-spacing: -0.01em; margin-bottom: 10px; }
+.story-step p { max-width: 40ch; text-align: center; color: var(--dim); margin: 0; }
 @media (max-width: 900px) {
   .story { grid-template-columns: 1fr; }
   .story-stage { display: none; }
@@ -428,7 +428,7 @@ body { background: transparent; }
 }
 #features .wrap { max-width: 1480px; }
 @media (min-width: 901px) {
-  .story { grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); grid-template-areas: "steps window"; }
+  .story { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: "steps window"; }
   .story-steps { grid-area: steps; padding: 0; border-left: 0; }
   .story-steps::before, .story-steps::after { left: auto; right: calc(var(--story-gap) / -2); }
   .story-steps::before { z-index: 1; }
