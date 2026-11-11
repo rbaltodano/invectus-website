@@ -739,15 +739,15 @@ function featureStory() {
 
 /* ---------- Download button: name the visitor's platform ---------- */
 function downloadButton() {
-  // macOS: the button jumps to the install command. Other systems have no installer yet, so it
-  // says so and links to the build-from-source steps (no unverified platform claims).
+  // macOS: the button jumps to the install command. Windows and Linux: the button downloads that
+  // system's installer from the GitHub release (each passed install + smoke tests in CI).
   const btn = document.querySelector("#download"), label = btn?.querySelector(".download-label");
   if (!label) return;
   const p = (navigator.userAgentData?.platform || navigator.platform || navigator.userAgent).toLowerCase();
   if (/mac|iphone|ipad/.test(p)) { label.textContent = "Download for macOS"; return; }
-  label.textContent = "Build from source";
-  btn.href = "https://github.com/rbaltodano/inVectus#build-from-source";
-  btn.target = "_blank"; btn.rel = "noopener";
+  const base = "https://github.com/rbaltodano/inVectus/releases/download/v0.2.0/";
+  if (/win/.test(p)) { label.textContent = "Download for Windows"; btn.href = base + "inVectus_0.2.0_x64-setup.exe"; return; }
+  if (/linux|x11/.test(p) && !/android/.test(p)) { label.textContent = "Download for Linux (.deb)"; btn.href = base + "inVectus_0.2.0_amd64.deb"; return; }
 }
 
 /* ---------- inVectus search example: real precomputed checks, nearest papers on the map ---------- */
