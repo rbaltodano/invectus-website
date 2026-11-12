@@ -1257,6 +1257,8 @@ function reveals() {
     if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); }
   }), { threshold: 0.15 });
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+  // Integration cards and chips flicker in after a random delay under 250 ms, as in the app.
+  document.querySelectorAll(".int-grid li, .int-chips li").forEach((li) => li.style.setProperty("--card-delay", `${Math.round(Math.random() * 250)}ms`));
 }
 
 rimTrail();

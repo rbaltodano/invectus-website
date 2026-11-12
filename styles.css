@@ -524,3 +524,40 @@ body { background: transparent; }
 .mock { border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 30px 90px rgba(0, 0, 0, 0.6); }
 .m-dots i { box-shadow: inset 0 0 0 0.5px rgba(0, 0, 0, 0.15); }
 .m-req { color: #b3361f; }
+
+/* Integrations: data sources, outside checks, planned (mirrors the app's Integrations page). */
+/* Light, and joined to the Agents section below it: one light band. */
+main > section.integrations { padding-bottom: 0; }
+.integrations + #agents { padding-top: clamp(96px, 12vw, 160px); }
+.int-intro { max-width: 720px; margin: 0 auto clamp(40px, 5vw, 64px); text-align: center; }
+.int-intro h2 { font-size: clamp(36px, 5.4vw, 72px); line-height: 1.04; letter-spacing: -0.03em; text-wrap: balance; margin-bottom: 20px; }
+.int-intro p { margin: 0 auto; max-width: 600px; }
+.int-tag { display: inline-block; margin-bottom: 20px; padding: 3px 10px; border: 1px solid var(--line-2); border-radius: 999px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); }
+.int-label { font-family: var(--mono); font-size: 10.5px; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; }
+.int-grid { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.int-grid li { display: grid; grid-template-columns: 22px 1fr; grid-template-rows: auto auto; column-gap: 14px; row-gap: 2px; align-items: center; padding: 18px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); }
+.int-mark { grid-row: 1 / 3; display: block; color: var(--ink); }
+.int-mark svg { display: block; }
+.int-name { font-size: 14.5px; }
+.int-what { grid-column: 2; font-size: 12.5px; color: var(--dim); }
+.int-feeds { grid-column: 1 / -1; margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.int-feeds::before { content: "Feeds "; opacity: 0.6; }
+.int-row { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(24px, 4vw, 56px); margin-top: clamp(40px, 5vw, 56px); }
+.int-row .int-group { border-top: 1px solid var(--line); padding-top: 20px; }
+.int-row p { font-size: 13.5px; }
+.int-chips { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.int-chips li { padding: 4px 12px; border: 1px solid var(--line-2); border-radius: 999px; font-size: 13px; }
+.integrations .figure-note { margin-top: clamp(32px, 4vw, 48px); font-family: var(--sans); font-size: 12px; letter-spacing: 0; text-transform: none; max-width: none; }
+/* Cards and chips flicker in as in the app (src/App.css item-flicker, src/dot-flicker.ts): each
+   after its own random delay under 250 ms (--card-delay, set in main.js), opacity steps
+   1, .2, .85, .35, .7, .5 over 150 ms, then holds. */
+@keyframes item-flicker {
+  0% { opacity: 0; } 0.01% { opacity: 1; } 16.67% { opacity: .2; } 33.33% { opacity: .85; }
+  50% { opacity: .35; } 66.67% { opacity: .7; } 83.33% { opacity: .5; } 100% { opacity: 1; }
+}
+.reveal .int-grid li, .reveal .int-chips li { opacity: 0; }
+.reveal.in .int-grid li, .reveal.in .int-chips li { animation: item-flicker 150ms step-end both; animation-delay: calc(200ms + var(--card-delay, 0ms)); }
+@media (prefers-reduced-motion: reduce) { .reveal .int-grid li, .reveal .int-chips li { opacity: 1; animation: none; } }
+@media (max-width: 860px) { .int-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { .int-row { grid-template-columns: 1fr; } }
+@media (max-width: 520px) { .int-grid { grid-template-columns: 1fr; } }
