@@ -586,7 +586,7 @@ function agentChat() {
       ticker = setInterval(() => {
         const head = (tick++ % (span + 6)) - 2;
         chars.forEach((c, i) => { const d = Math.abs(i - head); c.style.opacity = d === 0 ? 1 : d === 1 ? 0.65 : 0.35; });
-      }, 120);
+      }, 85); // the app's shimmer tick (src/agents.tsx TICK_MS)
     };
     later(700, () => {
       think = add("c-think", `<span class="c-avatar"><svg width="16" height="16" aria-hidden="true"><use href="${a.mark}"/></svg></span><span class="c-think-text"></span>`);
